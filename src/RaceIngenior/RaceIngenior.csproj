@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>RaceIngenior</RootNamespace>
+    <AssemblyName>RaceIngenior</AssemblyName>
+    <ApplicationIcon />
+    <LangVersion>latest</LangVersion>
+    <Version>0.0.1.0</Version>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
+    <InformationalVersion>0.0.1.0-dev</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
+    <PackageReference Include="System.Speech" Version="8.0.0" />
+    <PackageReference Include="Whisper.net" Version="1.9.1" />
+    <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\secrets\gemini_api_key.example.txt" Link="secrets\gemini_api_key.example.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\secrets\gemini_api_key.txt" Link="secrets\gemini_api_key.txt" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\secrets\gemini_api_key.txt')" />
+  </ItemGroup>
+
+</Project>

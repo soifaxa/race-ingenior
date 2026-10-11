@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+Models/*.bin
+appsettings.Development.json
+.env
+secrets/gemini_api_key.txt
+secrets/secrets.json
+**/secrets/gemini_api_key.txt
+**/Data/session_memory.json
+**/Data/user_settings.json
+Data/

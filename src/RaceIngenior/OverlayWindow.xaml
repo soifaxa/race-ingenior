@@ -1,0 +1,129 @@
+<Window x:Class="RaceIngenior.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WEC carcass overlay"
+        Width="236" Height="196"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        FontFamily="Bahnschrift, Segoe UI"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+  <!-- FIA WEC timing-card language: white plate, red mark, black type, square edges -->
+  <Border Background="#F4F4F4"
+          BorderBrush="#111111"
+          BorderThickness="1"
+          SnapsToDevicePixels="True">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="28"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="26"/>
+      </Grid.RowDefinitions>
+
+      <!-- Championship header -->
+      <Grid Grid.Row="0" Background="#111111">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="6"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Rectangle Grid.Column="0" Fill="#E10600"/>
+        <TextBlock Grid.Column="1"
+                   Text="WEC"
+                   Foreground="#FFFFFF"
+                   FontSize="13"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   Margin="8,0,0,0"/>
+        <TextBlock Grid.Column="2"
+                   Text="TYRES"
+                   Foreground="#CCCCCC"
+                   FontSize="11"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   Margin="10,0,0,0"/>
+        <TextBlock Grid.Column="3"
+                   Text="°C"
+                   Foreground="#E10600"
+                   FontSize="11"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   Margin="0,0,10,0"/>
+      </Grid>
+
+      <!-- 2x2 timing cells -->
+      <Grid Grid.Row="1" Margin="0">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- hairline cross -->
+        <Rectangle Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                   Height="1" Fill="#CCCCCC" VerticalAlignment="Bottom"/>
+        <Rectangle Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                   Width="1" Fill="#CCCCCC" HorizontalAlignment="Right"/>
+
+        <Border Grid.Row="0" Grid.Column="0" Padding="10,8">
+          <StackPanel>
+            <TextBlock Text="FL" Foreground="#666666" FontSize="10" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding Fl}"
+                       Foreground="{Binding FlBrush}"
+                       FontSize="34"
+                       FontWeight="Bold"
+                       Margin="0,-2,0,0"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Row="0" Grid.Column="1" Padding="10,8">
+          <StackPanel>
+            <TextBlock Text="FR" Foreground="#666666" FontSize="10" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding Fr}"
+                       Foreground="{Binding FrBrush}"
+                       FontSize="34"
+                       FontWeight="Bold"
+                       Margin="0,-2,0,0"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Row="1" Grid.Column="0" Padding="10,8">
+          <StackPanel>
+            <TextBlock Text="RL" Foreground="#666666" FontSize="10" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding Rl}"
+                       Foreground="{Binding RlBrush}"
+                       FontSize="34"
+                       FontWeight="Bold"
+                       Margin="0,-2,0,0"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Row="1" Grid.Column="1" Padding="10,8">
+          <StackPanel>
+            <TextBlock Text="RR" Foreground="#666666" FontSize="10" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding Rr}"
+                       Foreground="{Binding RrBrush}"
+                       FontSize="34"
+                       FontWeight="Bold"
+                       Margin="0,-2,0,0"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- Status strip like a timing flag line -->
+      <Border Grid.Row="2" Background="{Binding StatusBrush}">
+        <TextBlock Text="{Binding Status}"
+                   Foreground="{Binding StatusForeground}"
+                   FontSize="11"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"/>
+      </Border>
+    </Grid>
+  </Border>
+</Window>
