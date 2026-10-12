@@ -1,0 +1,15 @@
+---
+description: Core Race Ingenior conventions (WPF LMU race engineer)
+alwaysApply: true
+---
+
+# Race Ingenior — Core
+
+- Stack: .NET 8 WPF, CommunityToolkit.Mvvm, DI via Microsoft.Extensions.Hosting
+- Product: Le Mans Ultimate race engineer (radio + telemetry + overlay)
+- Chat with the user in French; all UI strings stay in English
+- Never commit `secrets/gemini_api_key.txt` — only `secrets/gemini_api_key.example.txt`
+- Prefer small focused changes; match existing folder layout (`Radio/`, `Telemetry/`, `Services/`, `ViewModels/`)
+- After UI or service changes: `dotnet build src/RaceIngenior/RaceIngenior.csproj -c Debug` (stop `RaceIngenior` if the exe is locked)
+- Version: `InformationalVersion` in `.csproj`; user-facing history in `CHANGELOG.md`
+- Overlay is a topmost WPF window, not an in-game HUD injection

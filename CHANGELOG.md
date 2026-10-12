@@ -5,6 +5,17 @@ All notable changes to Race Ingenior are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease label on the informational version.
 
+## [0.0.1.1-dev] — 2026-10-12
+
+### Added
+
+- Cursor dev agents: `radio-pipeline`, `telemetry-lmu`, `wec-ui-overlay`, `build-release`
+- Project rules (`.cursor/rules/race-ingenior-core.mdc`) and `AGENTS.md` index
+
+### Notes
+
+- Assembly / file version: `0.0.1.1`. Informational version: `0.0.1.1-dev`.
+
 ## [0.0.1.0-dev] — 2026-10-11
 
 First development milestone: Windows race-engineer companion for Le Mans Ultimate.
