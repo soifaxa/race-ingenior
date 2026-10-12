@@ -1,0 +1,125 @@
+<Window x:Class="RaceIngenior.ConfirmExitWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Exit Race Ingenior"
+        Width="420"
+        SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        FontFamily="Bahnschrift, Segoe UI"
+        Topmost="True">
+
+  <Border Background="#121212"
+          BorderBrush="#2A2A2A"
+          BorderThickness="1"
+          SnapsToDevicePixels="True">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="32"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <Grid Grid.Row="0" Background="#0A0A0A">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="6"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Rectangle Grid.Column="0" Fill="#E10600"/>
+        <TextBlock Grid.Column="1"
+                   Text="EXIT"
+                   Foreground="#FFFFFF"
+                   FontSize="13"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   Margin="10,0,0,0"/>
+        <TextBlock Grid.Column="2"
+                   Text="RACE INGENIOR"
+                   Foreground="#AAAAAA"
+                   FontSize="11"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   Margin="12,0,12,0"/>
+      </Grid>
+
+      <Border Grid.Row="1" Background="#000000" Margin="1" Padding="18,16">
+        <StackPanel>
+          <TextBlock Text="Quit Race Ingenior?"
+                     Foreground="#F2F2F2"
+                     FontSize="16"
+                     FontWeight="Bold"
+                     Margin="0,0,0,8"/>
+          <TextBlock Text="Radio, telemetry and overlays will stop. This cannot be undone from the tray."
+                     Foreground="#AAAAAA"
+                     FontSize="12"
+                     TextWrapping="Wrap"/>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Background="#0A0A0A" Padding="12,10">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <Button Content="CANCEL"
+                  Click="Cancel_Click"
+                  Padding="16,8"
+                  Margin="0,0,8,0"
+                  Cursor="Hand"
+                  Background="#111111"
+                  Foreground="#F2F2F2"
+                  BorderBrush="#555555"
+                  BorderThickness="1"
+                  FontWeight="SemiBold">
+            <Button.Template>
+              <ControlTemplate TargetType="Button">
+                <Border x:Name="Bd"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Padding="{TemplateBinding Padding}">
+                  <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                  <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Bd" Property="BorderBrush" Value="#E10600"/>
+                  </Trigger>
+                </ControlTemplate.Triggers>
+              </ControlTemplate>
+            </Button.Template>
+          </Button>
+          <Button Content="QUIT"
+                  Click="Quit_Click"
+                  IsDefault="True"
+                  Padding="16,8"
+                  Cursor="Hand"
+                  Background="#E10600"
+                  Foreground="#FFFFFF"
+                  BorderBrush="#E10600"
+                  BorderThickness="1"
+                  FontWeight="SemiBold">
+            <Button.Template>
+              <ControlTemplate TargetType="Button">
+                <Border x:Name="Bd"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Padding="{TemplateBinding Padding}">
+                  <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                  <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Bd" Property="Background" Value="#B00500"/>
+                    <Setter TargetName="Bd" Property="BorderBrush" Value="#B00500"/>
+                  </Trigger>
+                </ControlTemplate.Triggers>
+              </ControlTemplate>
+            </Button.Template>
+          </Button>
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Border>
+</Window>

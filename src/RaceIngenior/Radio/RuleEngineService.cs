@@ -8,6 +8,8 @@ namespace RaceIngenior.Radio;
 /// </summary>
 public sealed class RuleEngineService
 {
+    private static readonly TimeSpan SameAlertCooldown = TimeSpan.FromMinutes(1);
+
     private readonly AppSettings _settings;
     private string? _lastAlert;
     private DateTimeOffset _lastAlertAt = DateTimeOffset.MinValue;
@@ -24,8 +26,17 @@ public sealed class RuleEngineService
 
     public string? Evaluate(TelemetrySnapshot snap)
     {
-        if (!snap.Connected)
+        if (!snap.IsInLiveSession)
+        {
+            // Menus / before session / pause / session over: no callouts.
+            // Reset transition trackers so the next entry does not false-trigger.
+            _wasInPitsOrGarage = true;
+            _warmupActive = false;
+            _coldExitWarned = false;
+            _warmReadyWarned = false;
+            _lastGamePhase = snap.GamePhase;
             return null;
+        }
 
         var now = DateTimeOffset.UtcNow;
         var inStands = snap.InPitsOrGarage;
@@ -54,7 +65,9 @@ public sealed class RuleEngineService
             _warmReadyWarned = false;
         }
 
-        if (alert is null && snap.GamePhase == 6 && _lastGamePhase != 6)
+        if (alert is null && TryDescribePunctures(snap.Wheels) is { } puncture)
+            alert = puncture;
+        else if (alert is null && snap.GamePhase == 6 && _lastGamePhase != 6)
             alert = "Full course yellow. Safety car.";
         else if (alert is null && snap.Overheating)
             alert = "Attention, moteur en surchauffe.";
@@ -79,7 +92,7 @@ public sealed class RuleEngineService
         if (alert is null)
             return null;
 
-        if (alert == _lastAlert && now - _lastAlertAt < TimeSpan.FromSeconds(8))
+        if (alert == _lastAlert && now - _lastAlertAt < SameAlertCooldown)
             return null;
 
         _lastAlert = alert;
@@ -139,6 +152,26 @@ public sealed class RuleEngineService
         minC = valid.Min();
         avgC = valid.Average();
         return true;
+    }
+
+    /// <summary>Punctured tyre(s) from rF2/LMU <c>mFlat</c> (deflated — not lock-up flat spot).</summary>
+    private static string? TryDescribePunctures(WheelTemps w)
+    {
+        if (!w.AnyFlat)
+            return null;
+
+        var corners = new List<string>(4);
+        if (w.FlFlat) corners.Add("avant gauche");
+        if (w.FrFlat) corners.Add("avant droit");
+        if (w.RlFlat) corners.Add("arrière gauche");
+        if (w.RrFlat) corners.Add("arrière droit");
+
+        if (corners.Count == 4)
+            return "Pneus à plat. Rentre immédiatement à la box.";
+
+        return corners.Count == 1
+            ? $"Pneu à plat {corners[0]}. Rentre à la box."
+            : $"Pneus à plat {string.Join(", ", corners)}. Rentre à la box.";
     }
 
     private static bool IsTireWearCritical(WheelTemps w)

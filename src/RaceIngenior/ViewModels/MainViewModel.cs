@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RaceIngenior.Models;
@@ -48,12 +49,16 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isLearning;
     [ObservableProperty] private int _speechRate;
     [ObservableProperty] private string _speechRateLabel = "Rate 1";
-    [ObservableProperty] private string _overlayToggleLabel = "Show carcass overlay";
+    [ObservableProperty] private string _overlayToggleLabel = "Show overlays";
     [ObservableProperty] private bool _overlayClickThrough = true;
+    [ObservableProperty] private bool _overlayForceShow;
+    [ObservableProperty] private int _conversationOverlaySeconds = 8;
+    [ObservableProperty] private string _appVersion = "";
 
     public ObservableCollection<string> LogLines { get; } = [];
     public ObservableCollection<PttDeviceOption> PttDevices { get; } = [];
     public ObservableCollection<int> ButtonIndexes { get; } = new(Enumerable.Range(0, 32));
+    public ObservableCollection<int> ConversationOverlayDurations { get; } = new([5, 8, 10]);
 
     public MainViewModel(
         TelemetryHub hub,
@@ -76,6 +81,7 @@ public partial class MainViewModel : ObservableObject
         _overlay = overlay;
         _startup = startup;
 
+        AppVersion = ResolveAppVersion();
         ApiKeyPath = _startup.ApiKeyFilePath;
         GeminiStatus = _llm.IsConfigured
             ? $"Key loaded · model {_llm.ModelName} · click Test Gemini"
@@ -83,6 +89,8 @@ public partial class MainViewModel : ObservableObject
         SelectedButtonIndex = _ptt.ButtonOffset;
         SpeechRate = _tts.Rate;
         OverlayClickThrough = _prefs.Current.OverlayClickThrough;
+        OverlayForceShow = _prefs.Current.OverlayForceShow;
+        ConversationOverlaySeconds = _prefs.Current.ConversationOverlaySeconds;
         UpdateSpeechRateLabel();
         UpdateOverlayLabel();
         _speechRateReady = true;
@@ -97,7 +105,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     private void UpdateOverlayLabel() =>
-        OverlayToggleLabel = _overlay.IsUserEnabled ? "Hide tyre overlay" : "Show tyre overlay";
+        OverlayToggleLabel = _overlay.IsUserEnabled ? "Hide overlays" : "Show overlays";
 
     partial void OnSpeechRateChanged(int value)
     {
@@ -165,7 +173,7 @@ public partial class MainViewModel : ObservableObject
             Phase = snap.Connected ? $"Phase {snap.GamePhase}  Yel {snap.YellowFlagState}" : "—";
             Energy = snap.VirtualEnergy is double e ? $"{e:0.0}" : (snap.RestNotes ?? "—");
             Tires = snap.Connected
-                ? $"FL {snap.Wheels.FlWear * 100:0}%  FR {snap.Wheels.FrWear * 100:0}%  RL {snap.Wheels.RlWear * 100:0}%  RR {snap.Wheels.RrWear * 100:0}%"
+                ? FormatTireWear(snap.Wheels)
                 : "—";
             TireCarcass = snap.Connected
                 ? $"FL {snap.Wheels.FlCarcassC:0}°C  FR {snap.Wheels.FrCarcassC:0}°C  RL {snap.Wheels.RlCarcassC:0}°C  RR {snap.Wheels.RrCarcassC:0}°C"
@@ -260,6 +268,7 @@ public partial class MainViewModel : ObservableObject
     {
         const string msg = "Radio check. Ingénieur à l'écoute.";
         LastEngineer = msg;
+        _overlay.ShowConversation(LastDriver, LastEngineer);
         await _tts.SpeakAsync(msg);
     }
 
@@ -279,6 +288,7 @@ public partial class MainViewModel : ObservableObject
         if (result.Ok)
         {
             LastEngineer = "Gemini connecté.";
+            _overlay.ShowConversation(LastDriver, LastEngineer);
             await _tts.SpeakAsync("Gemini connecté.");
         }
     }
@@ -292,6 +302,27 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void CopyLastExchange()
+    {
+        if (string.IsNullOrWhiteSpace(LastDriver) && string.IsNullOrWhiteSpace(LastEngineer))
+        {
+            LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Nothing to copy");
+            return;
+        }
+
+        var text = $"Driver: {LastDriver}{Environment.NewLine}Engineer: {LastEngineer}";
+        try
+        {
+            System.Windows.Clipboard.SetText(text);
+            LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Copied last exchange");
+        }
+        catch (Exception ex)
+        {
+            LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Copy failed: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
     private void ToggleOverlay()
     {
         _overlay.Toggle();
@@ -302,6 +333,21 @@ public partial class MainViewModel : ObservableObject
     partial void OnOverlayClickThroughChanged(bool value)
     {
         _overlay.SetClickThrough(value);
+    }
+
+    partial void OnOverlayForceShowChanged(bool value)
+    {
+        if (!_speechRateReady)
+            return;
+        _overlay.SetForceShow(value);
+        LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Overlay force show {(value ? "ON (layout / test)" : "OFF")}");
+    }
+
+    partial void OnConversationOverlaySecondsChanged(int value)
+    {
+        if (!_speechRateReady)
+            return;
+        _prefs.SaveConversationSeconds(value);
     }
 
     [RelayCommand]
@@ -327,5 +373,29 @@ public partial class MainViewModel : ObservableObject
         }
 
         System.Windows.Application.Current.Shutdown();
+    }
+
+    private static string FormatTireWear(WheelTemps w)
+    {
+        static string Corner(string name, double wear, bool flat) =>
+            flat ? $"{name} FLAT" : $"{name} {wear * 100:0}%";
+
+        return $"{Corner("FL", w.FlWear, w.FlFlat)}  {Corner("FR", w.FrWear, w.FrFlat)}  " +
+               $"{Corner("RL", w.RlWear, w.RlFlat)}  {Corner("RR", w.RrWear, w.RrFlat)}";
+    }
+
+    private static string ResolveAppVersion()
+    {
+        var informational = typeof(MainViewModel).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(informational))
+        {
+            // Strip optional "+<commit>" / metadata suffix from some SDK builds.
+            var plus = informational.IndexOf('+');
+            return plus > 0 ? informational[..plus] : informational;
+        }
+
+        return typeof(MainViewModel).Assembly.GetName().Version?.ToString(4) ?? "—";
     }
 }

@@ -16,6 +16,7 @@ Core project conventions always apply via `.cursor/rules/race-ingenior-core.mdc`
 ```powershell
 dotnet build src/RaceIngenior/RaceIngenior.csproj -c Debug
 & "src\RaceIngenior\bin\Debug\net8.0-windows\RaceIngenior.exe"
+.\scripts\install-whisper-model.ps1   # ggml-tiny.bin → Models/ + LocalAppData (not in repo)
 ```
 
 Stop a running instance before rebuild if the exe is locked.

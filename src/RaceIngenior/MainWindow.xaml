@@ -170,6 +170,9 @@
                  VerticalAlignment="Center" Margin="14,0,0,0"/>
       <TextBlock Grid.Column="2" Text="RACE INGENIOR" Foreground="#AAAAAA" FontSize="13" FontWeight="SemiBold"
                  VerticalAlignment="Center" Margin="14,0,0,0"/>
+      <TextBlock Grid.Column="3" Text="{Binding AppVersion, StringFormat={}v{0}}" Foreground="#666666" FontSize="11"
+                 FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0"
+                 ToolTip="Application version"/>
       <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
         <Button Style="{StaticResource WecButtonGhost}" Content="{Binding OverlayToggleLabel}"
                 Command="{Binding ToggleOverlayCommand}" Margin="0,0,8,0" Padding="10,6"/>
@@ -317,7 +320,13 @@
 
               <Border Background="#000000" BorderBrush="#2A2A2A" BorderThickness="1" Padding="10" Margin="0,0,0,10">
                 <StackPanel>
-                  <TextBlock Text="DRIVER" Foreground="#E10600" FontSize="10" FontWeight="Bold"/>
+                  <DockPanel Margin="0,0,0,2">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource WecButtonGhost}" Content="COPY"
+                            Command="{Binding CopyLastExchangeCommand}" Padding="10,4" Margin="8,0,0,0"
+                            VerticalAlignment="Center"/>
+                    <TextBlock Text="DRIVER" Foreground="#E10600" FontSize="10" FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+                  </DockPanel>
                   <TextBlock Text="{Binding LastDriver}" Foreground="#F2F2F2" TextWrapping="Wrap" Margin="0,2,0,8" MinHeight="18"/>
                   <TextBlock Text="ENGINEER" Foreground="#E10600" FontSize="10" FontWeight="Bold"/>
                   <TextBlock Text="{Binding LastEngineer}" Foreground="#F2F2F2" TextWrapping="Wrap" Margin="0,2,0,0" MinHeight="18"/>
@@ -333,9 +342,17 @@
               <TextBlock Style="{StaticResource Meta}" Text="OVERLAY"/>
               <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                 <CheckBox Content="Click-through" IsChecked="{Binding OverlayClickThrough}"
-                          VerticalAlignment="Center" Foreground="#F2F2F2"/>
+                          VerticalAlignment="Center" Foreground="#F2F2F2" Margin="0,0,16,0"/>
+                <CheckBox Content="Force show" IsChecked="{Binding OverlayForceShow}"
+                          VerticalAlignment="Center" Foreground="#F2F2F2" Margin="0,0,16,0"
+                          ToolTip="Keep tyre + radio overlays visible (ignore pit/pause/no data) for testing and placement"/>
+                <TextBlock Text="Radio toast" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox Style="{StaticResource WecCombo}" Width="72"
+                          ItemsSource="{Binding ConversationOverlayDurations}"
+                          SelectedItem="{Binding ConversationOverlaySeconds}"/>
+                <TextBlock Text="s" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="6,0,0,0"/>
               </StackPanel>
-              <TextBlock Text="Borderless windowed LMU recommended. Overlay auto-hides in box / pause."
+              <TextBlock Text="Force show: both overlays stay up for layout (turn click-through off to drag / scale). Otherwise tyre card auto-hides in box / pause; radio toast lasts 5–10 s."
                          Foreground="#777777" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,10"/>
 
               <TextBlock Style="{StaticResource Meta}" Text="API KEY FILE"/>
@@ -381,7 +398,7 @@
         <ContextMenu>
           <MenuItem Header="Show dashboard" Click="Show_Click"/>
           <MenuItem Header="Hide to tray" Click="Hide_Click"/>
-          <MenuItem Header="Toggle tyre overlay" Click="Overlay_Click"/>
+          <MenuItem Header="Toggle overlays" Click="Overlay_Click"/>
           <MenuItem Header="Restart app" Click="Restart_Click"/>
           <Separator/>
           <MenuItem Header="Exit" Click="Exit_Click"/>

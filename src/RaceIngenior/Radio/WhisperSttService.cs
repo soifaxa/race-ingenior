@@ -39,7 +39,7 @@ public sealed class WhisperSttService : ISttService, IAsyncDisposable
             if (_processor is not null)
                 return;
 
-            var path = Path.GetFullPath(_settings.WhisperModelPath);
+            var path = ResolveModelPath(_settings.WhisperModelPath);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
             if (!File.Exists(path))
@@ -84,6 +84,50 @@ public sealed class WhisperSttService : ISttService, IAsyncDisposable
         _factory?.Dispose();
         _initGate.Dispose();
     }
+
+    /// <summary>
+    /// Resolves a relative Whisper path outside bin/: prefers an existing file under
+    /// LocalAppData, repo Models/, or project folder; otherwise installs under LocalAppData.
+    /// </summary>
+    internal static string ResolveModelPath(string configured)
+    {
+        if (string.IsNullOrWhiteSpace(configured))
+            configured = "Models/ggml-tiny.bin";
+
+        configured = configured.Trim().Replace('/', Path.DirectorySeparatorChar);
+
+        if (Path.IsPathRooted(configured))
+            return Path.GetFullPath(configured);
+
+        foreach (var root in CandidateRoots())
+        {
+            var candidate = Path.GetFullPath(Path.Combine(root, configured));
+            if (File.Exists(candidate))
+                return candidate;
+        }
+
+        return Path.GetFullPath(Path.Combine(LocalAppRoot(), configured));
+    }
+
+    private static IEnumerable<string> CandidateRoots()
+    {
+        yield return LocalAppRoot();
+
+        // bin/Debug/net8.0-windows → repo root (Models/ggml-tiny.bin from install script)
+        var repoGuess = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        if (Directory.Exists(repoGuess))
+            yield return repoGuess;
+
+        // Project dir (src/RaceIngenior) — optional local Models/
+        var projectGuess = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+        if (Directory.Exists(projectGuess))
+            yield return projectGuess;
+    }
+
+    private static string LocalAppRoot() =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "RaceIngenior");
 }
 
 public sealed class MicRecorder

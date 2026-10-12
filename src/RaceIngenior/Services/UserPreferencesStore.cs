@@ -14,7 +14,19 @@ public sealed class UserPreferences
     public bool OverlayVisible { get; set; }
     public double? OverlayLeft { get; set; }
     public double? OverlayTop { get; set; }
+    public double OverlayScale { get; set; } = 1.0;
     public bool OverlayClickThrough { get; set; } = true;
+    /// <summary>Bypass pit/pause/telemetry gates so overlays stay visible for layout.</summary>
+    public bool OverlayForceShow { get; set; }
+    public double? ConversationLeft { get; set; }
+    public double? ConversationTop { get; set; }
+    /// <summary>How long the radio exchange toast stays visible (5–10 s).</summary>
+    public int ConversationOverlaySeconds { get; set; } = 8;
+    public double? MainWindowLeft { get; set; }
+    public double? MainWindowTop { get; set; }
+    public double? MainWindowWidth { get; set; }
+    public double? MainWindowHeight { get; set; }
+    public bool MainWindowMaximized { get; set; } = true;
 }
 
 public sealed class UserPreferencesStore
@@ -55,12 +67,42 @@ public sealed class UserPreferencesStore
         Persist();
     }
 
-    public void SaveOverlay(bool visible, double left, double top, bool clickThrough)
+    public void SaveOverlay(bool visible, double left, double top, double scale, bool clickThrough)
     {
         Current.OverlayVisible = visible;
         Current.OverlayLeft = left;
         Current.OverlayTop = top;
+        Current.OverlayScale = Math.Clamp(scale, 0.6, 2.0);
         Current.OverlayClickThrough = clickThrough;
+        Persist();
+    }
+
+    public void SaveConversationOverlay(double left, double top)
+    {
+        Current.ConversationLeft = left;
+        Current.ConversationTop = top;
+        Persist();
+    }
+
+    public void SaveConversationSeconds(int seconds)
+    {
+        Current.ConversationOverlaySeconds = Math.Clamp(seconds, 5, 10);
+        Persist();
+    }
+
+    public void SaveOverlayForceShow(bool forceShow)
+    {
+        Current.OverlayForceShow = forceShow;
+        Persist();
+    }
+
+    public void SaveMainWindow(double left, double top, double width, double height, bool maximized)
+    {
+        Current.MainWindowLeft = left;
+        Current.MainWindowTop = top;
+        Current.MainWindowWidth = width;
+        Current.MainWindowHeight = height;
+        Current.MainWindowMaximized = maximized;
         Persist();
     }
 
@@ -73,7 +115,13 @@ public sealed class UserPreferencesStore
 
             var loaded = JsonSerializer.Deserialize<UserPreferences>(File.ReadAllText(_path));
             if (loaded is not null)
+            {
+                loaded.OverlayScale = Math.Clamp(loaded.OverlayScale <= 0 ? 1.0 : loaded.OverlayScale, 0.6, 2.0);
+                loaded.ConversationOverlaySeconds = Math.Clamp(
+                    loaded.ConversationOverlaySeconds is < 5 or > 10 ? 8 : loaded.ConversationOverlaySeconds,
+                    5, 10);
                 Current = loaded;
+            }
         }
         catch (Exception ex)
         {

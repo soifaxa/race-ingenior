@@ -19,6 +19,7 @@ Canonical model for the rest of the app: `Models/TelemetrySnapshot.cs`.
 ## Domain facts
 
 - Tire **wear** in rF2: `mWear` ≈ 1.0 new → remaining fraction; low remaining = worn
+- Tire **puncture**: `mFlat` → `WheelTemps.*Flat` / `AnyFlat` (deflated — not lock-up flat spot)
 - Prefer **carcass** temperatures (Kelvin in shared memory → Celsius in snapshot)
 - Thresholds: `TireColdBelowC` / `TireWarmReadyC` in `appsettings.json`
 - Expose clear flags: `InPitBox`, pitlane, `IsPaused` — UI/radio/overlay depend on them

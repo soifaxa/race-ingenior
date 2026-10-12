@@ -18,6 +18,8 @@ public sealed class RadioPipelineService : IHostedService
     private int _processing;
 
     public event Action<string>? LogLine;
+    /// <summary>Raised when a driver/engineer exchange (or alert) is ready for UI overlays.</summary>
+    public event Action<string, string>? ExchangeUpdated;
     public string LastDriverText { get; private set; } = "";
     public string LastEngineerText { get; private set; } = "";
     public string Mode { get; private set; } = "Idle";
@@ -116,6 +118,7 @@ public sealed class RadioPipelineService : IHostedService
 
             LastEngineerText = reply;
             Emit($"Engineer: {reply}");
+            ExchangeUpdated?.Invoke(LastDriverText, LastEngineerText);
             await _tts.SpeakAsync(reply);
             Mode = "Idle";
         }
@@ -144,6 +147,7 @@ public sealed class RadioPipelineService : IHostedService
 
         Emit($"Alert: {alert}");
         LastEngineerText = alert;
+        ExchangeUpdated?.Invoke(LastDriverText, LastEngineerText);
         _memory.RememberAlert(alert, snap);
         _ = _tts.SpeakAsync(alert);
     }

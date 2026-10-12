@@ -121,7 +121,11 @@ public sealed class SharedMemoryTelemetrySource : IDisposable
                 FlCarcassC = KelvinToC(fl.mTireCarcassTemperature),
                 FrCarcassC = KelvinToC(fr.mTireCarcassTemperature),
                 RlCarcassC = KelvinToC(rl.mTireCarcassTemperature),
-                RrCarcassC = KelvinToC(rr.mTireCarcassTemperature)
+                RrCarcassC = KelvinToC(rr.mTireCarcassTemperature),
+                FlFlat = fl.mFlat != 0,
+                FrFlat = fr.mFlat != 0,
+                RlFlat = rl.mFlat != 0,
+                RrFlat = rr.mFlat != 0
             },
             Nearby = nearby,
             VirtualEnergy = RestCache.VirtualEnergy,

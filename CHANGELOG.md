@@ -5,6 +5,34 @@ All notable changes to Race Ingenior are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease label on the informational version.
 
+## [0.0.1.3-dev] — 2026-10-12
+
+### Added
+
+- Whisper model install script: `scripts/install-whisper-model.ps1` (repo `Models/` + `%LocalAppData%\RaceIngenior\Models\`)
+- Tyre overlay: dark WEC theme aligned with dashboard, fuel + last-vs-best Δ strip, remembered position and mouse-wheel scale
+- Radio conversation toast overlay (DRIVER / ENGINEER) for 5 / 8 / 10 s after each exchange
+- Overlay **Force show** checkbox to keep tyre + radio overlays visible for testing / placement
+- Dashboard window position, size, and maximized state remembered across launches
+- **COPY** button for the last DRIVER / ENGINEER exchange
+- Application version (`InformationalVersion`) shown in the championship header
+- WEC-styled exit confirmation when closing the dashboard (X / tray Exit)
+- Puncture detection via rF2/LMU `mFlat`: offline radio alert, Gemini `;flat=` context, dashboard / overlay **FLAT** markers
+
+### Fixed
+
+- Minimize (−) keeps the window in the taskbar; tray hide remains via “Hide to tray”
+- **Hide overlays** also suppresses the radio toast (not only the tyre card)
+- Whisper model path no longer resolves under `bin/`; looks up existing `Models/ggml-tiny.bin` in LocalAppData / repo, otherwise downloads to LocalAppData
+- Offline rule engine same-alert cooldown extended to 1 minute (was 8 s)
+- Rule alerts suppressed until a live session (no tyre-wear callouts at game launch / menus)
+
+### Notes
+
+- Assembly / file version: `0.0.1.3`. Informational version: `0.0.1.3-dev`.
+- `Models/*.bin` stays gitignored — run the install script (or let the app download on first STT use).
+- Agents docs updated (`AGENTS.md`, radio / overlay skills) for Whisper install and overlay toast behaviour.
+
 ## [0.0.1.2-dev] — 2026-10-12
 
 ### Fixed

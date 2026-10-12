@@ -32,6 +32,13 @@ public sealed class TelemetrySnapshot
     /// <summary>rF2/LMU game phase 9 = paused heartbeat.</summary>
     public bool IsPaused => GamePhase == 9 || (Connected && !InRealtime);
 
+    /// <summary>
+    /// Live on-track session (not menus, garage-before-session, pause, or session ended).
+    /// GamePhase 1–6: warmup → green / FCY.
+    /// </summary>
+    public bool IsInLiveSession =>
+        Connected && InRealtime && GamePhase is >= 1 and <= 6;
+
     public int Place { get; init; }
     public int Lap { get; init; }
     public int Gear { get; init; }
@@ -84,6 +91,13 @@ public sealed class WheelTemps
     public double FrCarcassC { get; init; }
     public double RlCarcassC { get; init; }
     public double RrCarcassC { get; init; }
+    /// <summary>rF2/LMU <c>mFlat</c> — punctured / deflated tyre (not lock-up flat spot).</summary>
+    public bool FlFlat { get; init; }
+    public bool FrFlat { get; init; }
+    public bool RlFlat { get; init; }
+    public bool RrFlat { get; init; }
+
+    public bool AnyFlat => FlFlat || FrFlat || RlFlat || RrFlat;
 }
 
 public sealed class NearbyCar

@@ -55,6 +55,17 @@ public sealed class TelemetryPromptBuilder
             .Append(F0(w.RlCarcassC)).Append(',')
             .Append(F0(w.RrCarcassC));
 
+        // Puncture flag (rF2 mFlat) — not lock-up flat spot.
+        if (w.AnyFlat)
+        {
+            var flats = new List<string>(4);
+            if (w.FlFlat) flats.Add("FL");
+            if (w.FrFlat) flats.Add("FR");
+            if (w.RlFlat) flats.Add("RL");
+            if (w.RrFlat) flats.Add("RR");
+            sb.Append(";flat=").Append(string.Join(',', flats));
+        }
+
         if (w.FlBrakeC > 400 || w.FrBrakeC > 400 || w.RlBrakeC > 400 || w.RrBrakeC > 400)
         {
             sb.Append(";brk")
