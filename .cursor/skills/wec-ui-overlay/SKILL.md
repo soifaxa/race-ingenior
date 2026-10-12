@@ -1,12 +1,15 @@
 ---
 name: wec-ui-overlay
 description: >-
-  Maintains the WEC dark WPF dashboard and carcass temperature overlay. Use when
-  editing MainWindow, OverlayWindow, OverlayService, overlay ViewModel, or visual
-  styling of Race Ingenior.
+  Maintains the carcass temperature overlay and dashboard layout notes. Use when
+  editing OverlayWindow, ConversationOverlayWindow, OverlayService, or overlay
+  ViewModel. For brand tokens use wec-design; for general WPF windows use wec-ui;
+  for flows use wec-ux.
 ---
 
 # WEC UI / Overlay Agent
+
+Cross-cut: **wec-design** (look) · **wec-ui** (WPF) · **wec-ux** (flows).
 
 ## Visual system (dashboard)
 
@@ -35,6 +38,12 @@ description: >-
 - RADIO vs RADIO LOG: keep log slightly smaller than radio controls (`1.55*` / `0.75*`)
 - Restart lives in the championship header (must stay visible)
 - Prefer styles already in `MainWindow.xaml` over new card chrome
+- Config UI lives in `SettingsWindow` (not the radio panel): PTT, TTS rate, overlay prefs, Gemini key
+- Left column: TELEMETRY → **TRACK MAP** → **TYRE CALL**
+- Track outlines: learned into repo `Tracks/*.json` via `TrackLayoutLearner`; if missing → oval + banner for developers to drive laps
+- Tyre call: Soft/Medium/Hard/Wet from weather + wetness (`TireCompoundAdvisor`)
+- Session report window: FIA WEC timing-board chrome (`SessionReportWindow` + `SessionReportViewModel`) — not Markdown UI
+- Reports browser: header **REPORTS** → `ReportsWindow` / `ReportsBrowserViewModel` → open board
 
 ## Verify
 

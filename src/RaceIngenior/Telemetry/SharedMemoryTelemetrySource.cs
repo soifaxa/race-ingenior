@@ -71,6 +71,7 @@ public sealed class SharedMemoryTelemetrySource : IDisposable
 
         var lapDist = _scoringData.mScoringInfo.mLapDist;
         var nearby = BuildNearby(playerScoring.Value, lapDist);
+        var field = BuildField(lapDist);
 
         return new TelemetrySnapshot
         {
@@ -83,12 +84,15 @@ public sealed class SharedMemoryTelemetrySource : IDisposable
             GamePhase = _scoringData.mScoringInfo.mGamePhase,
             YellowFlagState = _scoringData.mScoringInfo.mYellowFlagState,
             UnderYellow = playerScoring.Value.mUnderYellow != 0,
+            SectorFlags = CopySectorFlags(_scoringData.mScoringInfo.mSectorFlag),
+            PrimaryFlag = playerScoring.Value.mFlag,
             InPits = playerScoring.Value.mInPits != 0,
             InGarage = playerScoring.Value.mInGarageStall != 0,
             PitState = playerScoring.Value.mPitState,
             InRealtime = _scoringData.mScoringInfo.mInRealtime != 0,
             Place = playerScoring.Value.mPlace,
             Lap = playerTelem.mLapNumber,
+            FinishStatus = playerScoring.Value.mFinishStatus,
             Gear = playerTelem.mGear,
             SpeedKmh = speedMs * 3.6,
             Rpm = playerTelem.mEngineRPM,
@@ -104,6 +108,17 @@ public sealed class SharedMemoryTelemetrySource : IDisposable
             TimeBehindNext = playerScoring.Value.mTimeBehindNext,
             TimeBehindLeader = playerScoring.Value.mTimeBehindLeader,
             LapDistFraction = lapDist > 0 ? playerScoring.Value.mLapDist / lapDist : 0,
+            PlayerWorldX = playerScoring.Value.mPos.x,
+            PlayerWorldZ = playerScoring.Value.mPos.z,
+            DarkCloud = _scoringData.mScoringInfo.mDarkCloud,
+            Raining = _scoringData.mScoringInfo.mRaining,
+            AmbientTempC = _scoringData.mScoringInfo.mAmbientTemp,
+            TrackTempC = _scoringData.mScoringInfo.mTrackTemp,
+            MinPathWetness = _scoringData.mScoringInfo.mMinPathWetness,
+            MaxPathWetness = _scoringData.mScoringInfo.mMaxPathWetness,
+            AvgPathWetness = _scoringData.mScoringInfo.mAvgPathWetness,
+            FrontTireCompound = Decode(playerTelem.mFrontTireCompoundName),
+            RearTireCompound = Decode(playerTelem.mRearTireCompoundName),
             Wheels = new WheelTemps
             {
                 FlWear = fl.mWear,
@@ -128,9 +143,45 @@ public sealed class SharedMemoryTelemetrySource : IDisposable
                 RrFlat = rr.mFlat != 0
             },
             Nearby = nearby,
+            Field = field,
             VirtualEnergy = RestCache.VirtualEnergy,
             RestNotes = RestCache.LastNotes
         };
+    }
+
+    private List<TrackCar> BuildField(double lapDist)
+    {
+        var result = new List<TrackCar>();
+        var vehicles = _scoringData.mVehicles;
+        if (vehicles is null || lapDist <= 0)
+            return result;
+
+        var count = Math.Min(_scoringData.mScoringInfo.mNumVehicles, vehicles.Length);
+        for (var i = 0; i < count; i++)
+        {
+            var v = vehicles[i];
+            // Skip empty slots / garage-only entries with no place.
+            if (v.mPlace <= 0 && v.mIsPlayer == 0)
+                continue;
+
+            var frac = v.mLapDist / lapDist;
+            if (double.IsNaN(frac) || double.IsInfinity(frac))
+                frac = 0;
+            frac %= 1.0;
+            if (frac < 0) frac += 1.0;
+
+            result.Add(new TrackCar
+            {
+                Name = Decode(v.mDriverName),
+                VehicleClass = Decode(v.mVehicleClass),
+                Place = v.mPlace,
+                LapDistFraction = frac,
+                IsPlayer = v.mIsPlayer != 0,
+                InPits = v.mInPits != 0 || v.mInGarageStall != 0
+            });
+        }
+
+        return result.OrderBy(c => c.Place <= 0 ? int.MaxValue : c.Place).ToList();
     }
 
     private rF2VehicleScoring? FindPlayerScoring(out int index)
@@ -205,6 +256,16 @@ public sealed class SharedMemoryTelemetrySource : IDisposable
         }
 
         return result.OrderBy(c => Math.Abs(c.RelativeLapDist)).Take(5).ToList();
+    }
+
+    private static sbyte[] CopySectorFlags(sbyte[]? flags)
+    {
+        var copy = new sbyte[3];
+        if (flags is null)
+            return copy;
+        for (var i = 0; i < Math.Min(3, flags.Length); i++)
+            copy[i] = flags[i];
+        return copy;
     }
 
     private static double AvgTireTempC(rF2Wheel w)

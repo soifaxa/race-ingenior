@@ -12,7 +12,7 @@ description: >-
 
 1. `WheelPttService` — SharpDX DirectInput, learn/save binding via `UserPreferencesStore`
 2. `WhisperSttService` — model path from `appsettings` (`WhisperModelPath`); resolves outside `bin/` (LocalAppData / repo `Models/`). Install: `scripts/install-whisper-model.ps1`
-3. `GeminiEngineerService` — key from `ApiKeyStore` / `secrets/gemini_api_key.txt`
+3. `GeminiEngineerService` — key from in-app Save (`UserPreferencesStore` / LocalAppData)
 4. `WindowsTtsService` — French voice preferred; respect speech rate setting
 5. Fallback: `RuleEngineService` when Gemini unavailable or empty
 
@@ -24,6 +24,7 @@ Orchestrator: `RadioPipelineService`. Context: `TelemetryPromptBuilder` + `Engin
 - Gemini thinking budget must stay at `0` (empty replies if thinking eats the budget)
 - Wear alerts use **remaining** wear (alert when remaining is low), not “worn %” inverted
 - Puncture alerts from `WheelTemps.*Flat` (`mFlat`) — priority callout to box; prompt key `;flat=FL,…`
+- Flag alerts: FCY (phase 6), yellow states, local `SectorFlags`, blue (`PrimaryFlag` 6), green after FCY, session stop (phase 7)
 - No rule alerts until `IsInLiveSession` (Connected + InRealtime + GamePhase 1–6)
 - No spotter / nearby callouts while in pit box or stands (`InPitBox` / garage)
 - Offline rules must stay FR WEC engineer tone, concise for TTS

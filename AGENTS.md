@@ -6,7 +6,10 @@ Specialized Cursor agents for this repo. Invoke by naming the skill (e.g. “use
 |-------|--------|------|
 | **Radio** | `.cursor/skills/radio-pipeline` | PTT → Whisper → Gemini → TTS, rules, memory |
 | **Telemetry** | `.cursor/skills/telemetry-lmu` | Shared memory rF2/LMU, REST, snapshot model |
-| **UI / Overlay** | `.cursor/skills/wec-ui-overlay` | WPF dashboard, WEC dark theme, carcass overlay |
+| **Design** | `.cursor/skills/wec-design` | FIA WEC visual identity, colour, type, density |
+| **UI** | `.cursor/skills/wec-ui` | WPF windows, controls, MVVM wiring |
+| **UX** | `.cursor/skills/wec-ux` | Flows, IA, when to show reports / settings / overlays |
+| **UI / Overlay** | `.cursor/skills/wec-ui-overlay` | Carcass overlay + dashboard layout notes |
 | **Build / Release** | `.cursor/skills/build-release` | Build, version, changelog, exe path |
 
 Core project conventions always apply via `.cursor/rules/race-ingenior-core.mdc`.
@@ -18,5 +21,11 @@ dotnet build src/RaceIngenior/RaceIngenior.csproj -c Debug
 & "src\RaceIngenior\bin\Debug\net8.0-windows\RaceIngenior.exe"
 .\scripts\install-whisper-model.ps1   # ggml-tiny.bin → Models/ + LocalAppData (not in repo)
 ```
+
+Track maps: drive full on-track laps to learn outlines into `Tracks/*.json` (committed for everyone). Unknown circuits fall back to an oval map with a banner.
+
+Session reports: written when a live session ends (GamePhase 8); if still on track, waits for the finish line → `Reports/*.md` + `.json` (also `%LocalAppData%\RaceIngenior\Reports`). Browse anytime from the dashboard **REPORTS** button.
+
+Track records: personal best lap per track + car → **RECORDS** button; stored in `%LocalAppData%\RaceIngenior\track_records.json` (seeded from past reports).
 
 Stop a running instance before rebuild if the exe is locked.

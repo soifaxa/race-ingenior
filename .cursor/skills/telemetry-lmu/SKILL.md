@@ -23,6 +23,12 @@ Canonical model for the rest of the app: `Models/TelemetrySnapshot.cs`.
 - Prefer **carcass** temperatures (Kelvin in shared memory → Celsius in snapshot)
 - Thresholds: `TireColdBelowC` / `TireWarmReadyC` in `appsettings.json`
 - Expose clear flags: `InPitBox`, pitlane, `IsPaused` — UI/radio/overlay depend on them
+- Field list for track map: `TelemetrySnapshot.Field` (`TrackCar` from scoring `mLapDist` / `mPlace` / player / pits)
+- Track learning: `PlayerWorldX` / `PlayerWorldZ` + lap fraction → `TrackLayoutStore` (`Tracks/*.json`)
+- Weather on scoring: `mRaining` / `mTrackTemp` / `mAmbientTemp` / path wetness → tyre call (`TireCompoundAdvisor`)
+- Session end reports: `SessionReportService` (live start → GamePhase 8; if on track, wait for finish line / `mFinishStatus` / pits before save) → `Reports/*.md` + `.json`
+- Finish status: scoring `mFinishStatus` → `TelemetrySnapshot.FinishStatus` (0 none, 1 finished, 2 dnf, 3 dq)
+- Hypercar Virtual Energy: REST `rest/garage/UIScreen/RepairAndRefuel` → `fuelInfo.currentVirtualEnergy` / `maxVirtualEnergy` as 0–100 % (`RestCache.VirtualEnergy`); not in shared memory
 - Do not invent fields missing from rF2 layouts; map carefully from `rF2Data.cs`
 
 ## Rules when changing mappings

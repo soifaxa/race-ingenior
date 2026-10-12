@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:controls="clr-namespace:RaceIngenior.Controls"
         Title="Race Ingenior — WEC"
         Height="780" Width="1100"
         MinHeight="640" MinWidth="960"
@@ -73,7 +74,6 @@
       <Setter Property="Background" Value="#E10600"/>
       <Setter Property="BorderBrush" Value="#E10600"/>
     </Style>
-
     <Style x:Key="WecComboItem" TargetType="ComboBoxItem">
       <Setter Property="Background" Value="#161616"/>
       <Setter Property="Foreground" Value="#F2F2F2"/>
@@ -174,6 +174,12 @@
                  FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0"
                  ToolTip="Application version"/>
       <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+        <Button Style="{StaticResource WecButtonGhost}" Content="RECORDS"
+                Click="Records_Click" Margin="0,0,8,0" Padding="10,6"/>
+        <Button Style="{StaticResource WecButtonGhost}" Content="REPORTS"
+                Click="Reports_Click" Margin="0,0,8,0" Padding="10,6"/>
+        <Button Style="{StaticResource WecButtonGhost}" Content="SETTINGS"
+                Click="Settings_Click" Margin="0,0,8,0" Padding="10,6"/>
         <Button Style="{StaticResource WecButtonGhost}" Content="{Binding OverlayToggleLabel}"
                 Command="{Binding ToggleOverlayCommand}" Margin="0,0,8,0" Padding="10,6"/>
         <Button Style="{StaticResource WecButtonDanger}" Content="RESTART"
@@ -211,57 +217,253 @@
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
 
-      <!-- TELEMETRY CARD -->
-      <Border Grid.Column="0" Background="#121212" BorderBrush="#2A2A2A" BorderThickness="1">
-        <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="28"/>
-            <RowDefinition Height="*"/>
-          </Grid.RowDefinitions>
-          <Grid Grid.Row="0" Background="#000000">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="6"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Rectangle Fill="#E10600"/>
-            <TextBlock Grid.Column="1" Style="{StaticResource SectionTitle}" Text="TELEMETRY"/>
-          </Grid>
-          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14">
-            <Grid>
+      <!-- TELEMETRY + TRACK MAP -->
+      <Grid Grid.Column="0">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="1.05*"/>
+          <RowDefinition Height="10"/>
+          <RowDefinition Height="0.95*"/>
+          <RowDefinition Height="10"/>
+          <RowDefinition Height="0.72*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#121212" BorderBrush="#2A2A2A" BorderThickness="1">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="28"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Background="#000000">
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="6"/>
                 <ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
-              <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                <TextBlock Style="{StaticResource Meta}" Text="TRACK"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding Track}"/>
-                <TextBlock Style="{StaticResource Meta}" Text="CAR"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding Vehicle}"/>
-                <TextBlock Style="{StaticResource Meta}" Text="POSITION / LAP"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding Place}"/>
-                <TextBlock Style="{StaticResource Meta}" Text="SPEED / RPM"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding Speed}"/>
-                <TextBlock Style="{StaticResource Meta}" Text="FUEL"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding Fuel}"/>
-                <TextBlock Style="{StaticResource Meta}" Text="LAP TIMES"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding LastLap}"/>
-              </StackPanel>
-              <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                <TextBlock Style="{StaticResource Meta}" Text="SESSION / FLAGS"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding Phase}"/>
-                <TextBlock Style="{StaticResource Meta}" Text="VIRTUAL ENERGY"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding Energy}"/>
-                <TextBlock Style="{StaticResource Meta}" Text="TYRE REMAINING"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding Tires}" FontSize="14"/>
-                <TextBlock Style="{StaticResource Meta}" Text="TYRE CARCASS"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding TireCarcass}" FontSize="14"/>
-                <TextBlock Style="{StaticResource Meta}" Text="TYRE SURFACE"/>
-                <TextBlock Style="{StaticResource Value}" Text="{Binding TireTemps}" FontSize="14"/>
-              </StackPanel>
+              <Rectangle Fill="#E10600"/>
+              <TextBlock Grid.Column="1" Style="{StaticResource SectionTitle}" Text="TELEMETRY"/>
             </Grid>
-          </ScrollViewer>
-        </Grid>
-      </Border>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                  <TextBlock Style="{StaticResource Meta}" Text="TRACK"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding Track}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="CAR"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding Vehicle}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="POSITION / LAP"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding Place}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="SPEED / RPM"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding Speed}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="FUEL"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding Fuel}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="LAP TIMES"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding LastLap}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                  <TextBlock Style="{StaticResource Meta}" Text="SESSION"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding Phase}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="TRACK TEMP"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding WeatherTrackTemp}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="AIR TEMP"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding WeatherAmbientTemp}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="FLAGS"/>
+                  <TextBlock Text="{Binding FlagStatus}" FontSize="18" FontWeight="Bold" Margin="0,0,0,2">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="#22C55E"/>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding FlagStatus}" Value="FCY">
+                            <Setter Property="Foreground" Value="#F5D000"/>
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding FlagStatus}" Value="YELLOW">
+                            <Setter Property="Foreground" Value="#F5D000"/>
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding FlagStatus}" Value="LOCAL YELLOW">
+                            <Setter Property="Foreground" Value="#F5D000"/>
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding FlagStatus}" Value="BLUE">
+                            <Setter Property="Foreground" Value="#2E7DFF"/>
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding FlagStatus}" Value="RED / STOP">
+                            <Setter Property="Foreground" Value="#E10600"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                  <TextBlock Text="{Binding FlagDetail}" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="VIRTUAL ENERGY"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding Energy}"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="TYRE REMAINING"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding Tires}" FontSize="14"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="TYRE CARCASS"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding TireCarcass}" FontSize="14"/>
+                  <TextBlock Style="{StaticResource Meta}" Text="TYRE SURFACE"/>
+                  <TextBlock Style="{StaticResource Value}" Text="{Binding TireTemps}" FontSize="14"/>
+                </StackPanel>
+              </Grid>
+            </ScrollViewer>
+          </Grid>
+        </Border>
+
+        <Border Grid.Row="2" Background="#121212" BorderBrush="#2A2A2A" BorderThickness="1">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="28"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Background="#000000">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              <Rectangle Fill="#E10600"/>
+              <TextBlock Grid.Column="1" Style="{StaticResource SectionTitle}" Text="TRACK MAP"/>
+              <TextBlock Grid.Column="2" Text="{Binding TrackMapModeLabel}"
+                         Foreground="#666666" FontSize="10" FontWeight="SemiBold"
+                         VerticalAlignment="Center" Margin="0,0,12,0"
+                         ToolTip="LEARNED = outline from Tracks/*.json · OVAL = temporary fallback"/>
+            </Grid>
+            <controls:TrackMapControl Grid.Row="1"
+                                      Cars="{Binding TrackCars}"
+                                      Layout="{Binding CurrentTrackLayout}"
+                                      StatusMessage="{Binding TrackMapStatus}"
+                                      Margin="4"/>
+          </Grid>
+        </Border>
+
+        <Border Grid.Row="4" Background="#121212" BorderBrush="#2A2A2A" BorderThickness="1">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="28"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Background="#000000">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              <Rectangle Fill="#E10600"/>
+              <TextBlock Grid.Column="1" Style="{StaticResource SectionTitle}" Text="TYRE CALL"/>
+              <TextBlock Grid.Column="2" Text="{Binding TireConditionLabel}"
+                         FontSize="10" FontWeight="Bold"
+                         VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="#E10600"/>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding TireRecommended}" Value="SOFT">
+                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding TireRecommended}" Value="MEDIUM">
+                        <Setter Property="Foreground" Value="#F5D000"/>
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding TireRecommended}" Value="HARD">
+                        <Setter Property="Foreground" Value="#E10600"/>
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding TireRecommended}" Value="WET">
+                        <Setter Property="Foreground" Value="#2E7DFF"/>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Grid>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,10">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="14"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="#000000" BorderBrush="#2A2A2A" BorderThickness="1"
+                        Padding="14,10" MinWidth="110" VerticalAlignment="Top">
+                  <StackPanel>
+                    <TextBlock Text="FIT" Foreground="#888888" FontSize="10" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding TireRecommended}"
+                               FontSize="26" FontWeight="Bold" Margin="0,2,0,0">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                          <Setter Property="Foreground" Value="#AAAAAA"/>
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding TireRecommended}" Value="SOFT">
+                              <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TireRecommended}" Value="MEDIUM">
+                              <Setter Property="Foreground" Value="#F5D000"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TireRecommended}" Value="HARD">
+                              <Setter Property="Foreground" Value="#E10600"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TireRecommended}" Value="WET">
+                              <Setter Property="Foreground" Value="#2E7DFF"/>
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                    <Border Height="4" Margin="0,8,0,0" CornerRadius="1">
+                      <Border.Style>
+                        <Style TargetType="Border">
+                          <Setter Property="Background" Value="#444444"/>
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding TireRecommended}" Value="SOFT">
+                              <Setter Property="Background" Value="#FFFFFF"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TireRecommended}" Value="MEDIUM">
+                              <Setter Property="Background" Value="#F5D000"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TireRecommended}" Value="HARD">
+                              <Setter Property="Background" Value="#E10600"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TireRecommended}" Value="WET">
+                              <Setter Property="Background" Value="#2E7DFF"/>
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Border.Style>
+                    </Border>
+                    <TextBlock Text="ON CAR" Foreground="#666666" FontSize="9" FontWeight="SemiBold" Margin="0,10,0,2"/>
+                    <TextBlock Text="{Binding TireFitted}" Foreground="#AAAAAA" FontSize="12" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </Border>
+
+                <StackPanel Grid.Column="2">
+                  <TextBlock Text="{Binding TireAdviceReason}" Foreground="#F2F2F2"
+                             FontSize="13" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                  <UniformGrid Columns="2">
+                    <StackPanel Margin="0,0,8,8">
+                      <TextBlock Style="{StaticResource Meta}" Text="TRACK TEMP"/>
+                      <TextBlock Text="{Binding WeatherTrackTemp}" Foreground="#F2F2F2" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,0,8">
+                      <TextBlock Style="{StaticResource Meta}" Text="AMBIENT"/>
+                      <TextBlock Text="{Binding WeatherAmbientTemp}" Foreground="#F2F2F2" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,8,0">
+                      <TextBlock Style="{StaticResource Meta}" Text="RAIN"/>
+                      <TextBlock Text="{Binding WeatherRain}" Foreground="#F2F2F2" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                    <StackPanel>
+                      <TextBlock Style="{StaticResource Meta}" Text="PATH WETNESS"/>
+                      <TextBlock Text="{Binding WeatherWetness}" Foreground="#F2F2F2" FontSize="13" FontWeight="Bold" TextWrapping="Wrap"/>
+                    </StackPanel>
+                  </UniformGrid>
+                  <TextBlock Margin="0,8,0,0" Foreground="#666666" FontSize="10" TextWrapping="Wrap"
+                             Text="Windows: Soft ≤15°C · Medium 15–25°C · Hard &gt;25°C · Wet if damp/rain."/>
+                  <TextBlock Margin="0,4,0,0" Foreground="#555555" FontSize="10"
+                             Text="{Binding WeatherCloud, StringFormat=Cloud cover: {0}}"/>
+                </StackPanel>
+              </Grid>
+            </ScrollViewer>
+          </Grid>
+        </Border>
+      </Grid>
 
       <!-- RADIO CARD -->
       <Border Grid.Column="2" Background="#121212" BorderBrush="#2A2A2A" BorderThickness="1">
@@ -287,43 +489,18 @@
 
           <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14">
             <StackPanel>
-              <TextBlock Style="{StaticResource Meta}" Text="PTT DEVICE"/>
-              <DockPanel Margin="0,0,0,8">
-                <Button DockPanel.Dock="Right" Style="{StaticResource WecButtonGhost}" Content="REFRESH"
-                        Command="{Binding RefreshDevicesCommand}" Margin="8,0,0,0" Padding="10,6"/>
-                <ComboBox Style="{StaticResource WecCombo}"
-                          ItemsSource="{Binding PttDevices}"
-                          SelectedItem="{Binding SelectedDevice}"
-                          DisplayMemberPath="Name"/>
-              </DockPanel>
-
-              <TextBlock Style="{StaticResource Meta}" Text="PTT BUTTON"/>
-              <DockPanel Margin="0,0,0,4">
-                <Button DockPanel.Dock="Right" Style="{StaticResource WecButtonGhost}"
-                        Content="{Binding LearnButtonLabel}"
-                        Command="{Binding ToggleLearnPttCommand}" Margin="8,0,0,0" Padding="10,6"/>
-                <ComboBox Style="{StaticResource WecCombo}"
-                          ItemsSource="{Binding ButtonIndexes}"
-                          SelectedItem="{Binding SelectedButtonIndex}"/>
-              </DockPanel>
-              <Button Style="{StaticResource WecButton}" Content="SAVE PTT BINDING"
-                      Command="{Binding SavePttBindingCommand}"
-                      HorizontalAlignment="Left" Margin="0,0,0,10"/>
-
-              <TextBlock Style="{StaticResource Meta}" Text="SPEECH RATE"/>
-              <DockPanel Margin="0,0,0,10">
-                <TextBlock DockPanel.Dock="Right" Text="{Binding SpeechRateLabel}"
-                           Foreground="#F2F2F2" VerticalAlignment="Center" MinWidth="72" FontWeight="Bold"/>
-                <Slider Minimum="-10" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True"
-                        Value="{Binding SpeechRate, Mode=TwoWay}" VerticalAlignment="Center"/>
-              </DockPanel>
+              <TextBlock Text="PTT, speech, overlay and Gemini key live in Settings."
+                         Foreground="#777777" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
               <Border Background="#000000" BorderBrush="#2A2A2A" BorderThickness="1" Padding="10" Margin="0,0,0,10">
                 <StackPanel>
                   <DockPanel Margin="0,0,0,2">
-                    <Button DockPanel.Dock="Right" Style="{StaticResource WecButtonGhost}" Content="COPY"
-                            Command="{Binding CopyLastExchangeCommand}" Padding="10,4" Margin="8,0,0,0"
-                            VerticalAlignment="Center"/>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource WecButtonGhost}"
+                            Command="{Binding CopyLastExchangeCommand}" Padding="8,5" Margin="8,0,0,0"
+                            VerticalAlignment="Center" ToolTip="Copy last exchange">
+                      <Path Width="12" Height="14" Stretch="Uniform" Fill="#F2F2F2"
+                            Data="M4,2 H10 A2,2 0 0 1 12,4 V12 A2,2 0 0 1 10,14 H4 A2,2 0 0 1 2,12 V4 A2,2 0 0 1 4,2 Z M6,0 H12 A2,2 0 0 1 14,2 V10 H12 V2 H6 Z"/>
+                    </Button>
                     <TextBlock Text="DRIVER" Foreground="#E10600" FontSize="10" FontWeight="Bold"
                                VerticalAlignment="Center"/>
                   </DockPanel>
@@ -333,30 +510,8 @@
                 </StackPanel>
               </Border>
 
-              <WrapPanel Margin="0,0,0,10">
-                <Button Style="{StaticResource WecButton}" Content="TEST GEMINI" Command="{Binding TestGeminiCommand}" Margin="0,0,8,8"/>
-                <Button Style="{StaticResource WecButtonGhost}" Content="TEST RADIO" Command="{Binding TestRadioCommand}" Margin="0,0,8,8"/>
-                <Button Style="{StaticResource WecButtonGhost}" Content="CLEAR MEMORY" Command="{Binding ClearMemoryCommand}" Margin="0,0,8,8"/>
-              </WrapPanel>
-
-              <TextBlock Style="{StaticResource Meta}" Text="OVERLAY"/>
-              <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                <CheckBox Content="Click-through" IsChecked="{Binding OverlayClickThrough}"
-                          VerticalAlignment="Center" Foreground="#F2F2F2" Margin="0,0,16,0"/>
-                <CheckBox Content="Force show" IsChecked="{Binding OverlayForceShow}"
-                          VerticalAlignment="Center" Foreground="#F2F2F2" Margin="0,0,16,0"
-                          ToolTip="Keep tyre + radio overlays visible (ignore pit/pause/no data) for testing and placement"/>
-                <TextBlock Text="Radio toast" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox Style="{StaticResource WecCombo}" Width="72"
-                          ItemsSource="{Binding ConversationOverlayDurations}"
-                          SelectedItem="{Binding ConversationOverlaySeconds}"/>
-                <TextBlock Text="s" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="6,0,0,0"/>
-              </StackPanel>
-              <TextBlock Text="Force show: both overlays stay up for layout (turn click-through off to drag / scale). Otherwise tyre card auto-hides in box / pause; radio toast lasts 5–10 s."
-                         Foreground="#777777" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,10"/>
-
-              <TextBlock Style="{StaticResource Meta}" Text="API KEY FILE"/>
-              <TextBlock Text="{Binding ApiKeyPath}" FontSize="11" TextWrapping="Wrap" Foreground="#AAAAAA"/>
+              <Button Style="{StaticResource WecButton}" Content="TEST RADIO" Command="{Binding TestRadioCommand}"
+                      HorizontalAlignment="Left"/>
             </StackPanel>
           </ScrollViewer>
 
@@ -397,6 +552,9 @@
       <tb:TaskbarIcon.ContextMenu>
         <ContextMenu>
           <MenuItem Header="Show dashboard" Click="Show_Click"/>
+          <MenuItem Header="Track records" Click="Records_Click"/>
+          <MenuItem Header="Session reports" Click="Reports_Click"/>
+          <MenuItem Header="Settings" Click="Settings_Click"/>
           <MenuItem Header="Hide to tray" Click="Hide_Click"/>
           <MenuItem Header="Toggle overlays" Click="Overlay_Click"/>
           <MenuItem Header="Restart app" Click="Restart_Click"/>

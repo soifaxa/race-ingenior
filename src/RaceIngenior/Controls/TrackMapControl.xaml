@@ -1,0 +1,42 @@
+<UserControl x:Class="RaceIngenior.Controls.TrackMapControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+  <Grid>
+    <Canvas x:Name="MapCanvas" ClipToBounds="True"/>
+    <Border x:Name="FallbackBanner"
+            Background="#CC000000"
+            BorderBrush="#444444"
+            BorderThickness="1"
+            Padding="10,8"
+            Margin="10"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Stretch"
+            Visibility="Collapsed">
+      <TextBlock x:Name="FallbackText"
+                 Foreground="#DDDDDD"
+                 FontSize="11"
+                 TextWrapping="Wrap"/>
+    </Border>
+    <TextBlock x:Name="EmptyHint"
+               Text="Waiting for field data…"
+               Foreground="#666666"
+               FontSize="11"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               Visibility="Collapsed"/>
+    <StackPanel Orientation="Horizontal"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Margin="8,0,0,6">
+      <Ellipse Width="8" Height="8" Fill="#E10600" Margin="0,0,4,0" VerticalAlignment="Center"/>
+      <TextBlock Text="HYPERCAR" Foreground="#888888" FontSize="9" FontWeight="SemiBold" Margin="0,0,10,0" VerticalAlignment="Center"/>
+      <Ellipse Width="8" Height="8" Fill="#2E7DFF" Margin="0,0,4,0" VerticalAlignment="Center"/>
+      <TextBlock Text="LMP2" Foreground="#888888" FontSize="9" FontWeight="SemiBold" Margin="0,0,10,0" VerticalAlignment="Center"/>
+      <Ellipse Width="8" Height="8" Fill="#22C55E" Margin="0,0,4,0" VerticalAlignment="Center"/>
+      <TextBlock Text="LMGT3" Foreground="#888888" FontSize="9" FontWeight="SemiBold" Margin="0,0,10,0" VerticalAlignment="Center"/>
+      <Ellipse Width="8" Height="8" Fill="#E10600" Stroke="#FFFFFF" StrokeThickness="1.5" Margin="0,0,4,0" VerticalAlignment="Center"/>
+      <TextBlock Text="YOU" Foreground="#888888" FontSize="9" FontWeight="SemiBold" VerticalAlignment="Center"/>
+    </StackPanel>
+  </Grid>
+</UserControl>

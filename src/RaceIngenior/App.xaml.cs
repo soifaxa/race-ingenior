@@ -21,8 +21,6 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
-        var keyTemplatePath = ApiKeyStore.EnsureSecretsTemplate();
-
         _host = Host.CreateDefaultBuilder(e.Args)
             .ConfigureAppConfiguration((_, config) =>
             {
@@ -32,18 +30,21 @@ public partial class App : System.Windows.Application
             })
             .ConfigureServices((context, services) =>
             {
-                services.AddSingleton<ApiKeyStore>();
                 services.AddSingleton<UserPreferencesStore>();
                 services.AddOptions<AppSettings>()
                     .Bind(context.Configuration.GetSection(AppSettings.SectionName))
-                    .Configure<ApiKeyStore, UserPreferencesStore>((settings, keys, prefs) =>
+                    .Configure<UserPreferencesStore>((settings, prefs) =>
                     {
-                        settings.GeminiApiKey = keys.ResolveKey(settings.GeminiApiKey);
+                        settings.GeminiApiKey = "";
                         prefs.ApplyTo(settings);
                     });
 
                 services.AddSingleton<TelemetryHub>();
                 services.AddSingleton<SharedMemoryTelemetrySource>();
+                services.AddSingleton<TrackLayoutStore>();
+                services.AddSingleton<TrackLayoutLearner>();
+                services.AddSingleton<TrackRecordsStore>();
+                services.AddSingleton<SessionReportService>();
                 services.AddHttpClient<LmuRestClient>();
                 services.AddHttpClient("gemini");
 
@@ -77,11 +78,15 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<OverlayService>();
                 services.AddSingleton<MainViewModel>();
                 services.AddSingleton<MainWindow>();
-                services.AddSingleton(new StartupInfo(keyTemplatePath));
             })
             .Build();
 
         await _host.StartAsync();
+
+        // Seed personal bests from any existing session reports.
+        var records = _host.Services.GetRequiredService<TrackRecordsStore>();
+        var reports = _host.Services.GetRequiredService<SessionReportService>();
+        records.MergeFromReports(reports.ListReports(), reports.TryLoadReport);
 
         var window = _host.Services.GetRequiredService<MainWindow>();
         MainWindow = window;
@@ -101,5 +106,3 @@ public partial class App : System.Windows.Application
         base.OnExit(e);
     }
 }
-
-public sealed record StartupInfo(string ApiKeyFilePath);

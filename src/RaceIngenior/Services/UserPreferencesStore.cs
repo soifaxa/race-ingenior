@@ -27,6 +27,10 @@ public sealed class UserPreferences
     public double? MainWindowWidth { get; set; }
     public double? MainWindowHeight { get; set; }
     public bool MainWindowMaximized { get; set; } = true;
+    /// <summary>Gemini API key saved from the dashboard (not an app install file).</summary>
+    public string? GeminiApiKey { get; set; }
+    /// <summary>Null = default on. When true/null, open the session report window at session end.</summary>
+    public bool? AutoOpenSessionReport { get; set; }
 }
 
 public sealed class UserPreferencesStore
@@ -40,7 +44,11 @@ public sealed class UserPreferencesStore
     public UserPreferencesStore(ILogger<UserPreferencesStore> logger)
     {
         _logger = logger;
-        _path = Path.Combine(AppContext.BaseDirectory, "Data", "user_settings.json");
+        var appDataDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "RaceIngenior");
+        Directory.CreateDirectory(appDataDir);
+        _path = Path.Combine(appDataDir, "user_settings.json");
         Load();
     }
 
@@ -49,6 +57,14 @@ public sealed class UserPreferencesStore
         settings.PttJoystickOffset = Current.PttJoystickOffset;
         if (!string.IsNullOrWhiteSpace(Current.PttDeviceNameContains))
             settings.PttDeviceNameContains = Current.PttDeviceNameContains;
+        if (!string.IsNullOrWhiteSpace(Current.GeminiApiKey))
+            settings.GeminiApiKey = Current.GeminiApiKey.Trim();
+    }
+
+    public void SaveGeminiApiKey(string? apiKey)
+    {
+        Current.GeminiApiKey = string.IsNullOrWhiteSpace(apiKey) ? null : apiKey.Trim();
+        Persist();
     }
 
     public void SavePtt(int buttonOffset, string? deviceNameContains, Guid? deviceGuid)
@@ -93,6 +109,14 @@ public sealed class UserPreferencesStore
     public void SaveOverlayForceShow(bool forceShow)
     {
         Current.OverlayForceShow = forceShow;
+        Persist();
+    }
+
+    public bool IsAutoOpenSessionReportEnabled => Current.AutoOpenSessionReport ?? true;
+
+    public void SaveAutoOpenSessionReport(bool enabled)
+    {
+        Current.AutoOpenSessionReport = enabled;
         Persist();
     }
 

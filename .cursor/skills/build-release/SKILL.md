@@ -21,7 +21,7 @@ Exe paths:
 - Debug: `src/RaceIngenior/bin/Debug/net8.0-windows/RaceIngenior.exe`
 - Release: `src/RaceIngenior/bin/Release/net8.0-windows/RaceIngenior.exe`
 
-Keep the exe next to its output folder (deps, `appsettings.json`, secrets copy).
+Keep the exe next to its output folder (deps, `appsettings.json`). Gemini key is set in-app, not via shipped secrets files.
 
 ## Versioning
 

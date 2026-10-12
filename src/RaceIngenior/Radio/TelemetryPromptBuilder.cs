@@ -25,6 +25,14 @@ public sealed class TelemetryPromptBuilder
         sb.Append(";ph").Append(s.GamePhase);
         if (s.YellowFlagState > 0) sb.Append(";yel").Append(s.YellowFlagState);
         if (s.UnderYellow) sb.Append(";UY");
+        if (s.IsBlueFlag) sb.Append(";BLUE");
+        if (s.HasLocalYellow)
+        {
+            sb.Append(";locY");
+            if (s.SectorFlags.Length > 1 && s.SectorFlags[1] > 0) sb.Append("S1");
+            if (s.SectorFlags.Length > 2 && s.SectorFlags[2] > 0) sb.Append("S2");
+            if (s.SectorFlags.Length > 0 && s.SectorFlags[0] > 0) sb.Append("S3");
+        }
         sb.Append(";spd").Append(F0(s.SpeedKmh));
         sb.Append(";g").Append(s.Gear);
         sb.Append(";fuel").Append(F1(s.FuelL)).Append('/').Append(F0(s.FuelCapacityL));

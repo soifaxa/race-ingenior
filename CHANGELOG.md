@@ -5,6 +5,38 @@ All notable changes to Race Ingenior are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease label on the informational version.
 
+## [0.0.1.4-dev] — 2026-10-12
+
+### Added
+
+- Dedicated **Settings** window (header + tray): PTT binding, speech rate, overlay options, Gemini API key (Save / Clear / Test), clear session memory
+- Gemini API key persisted in `%LocalAppData%\RaceIngenior\user_settings.json`
+- **Track map** panel under telemetry: class colours (Hypercar red / LMP2 blue / LMGT3 green; white ring = you)
+- Track outline **learning**: drive full on-track laps to record world XZ into `Tracks/*.json` (repo + output); missing layout falls back to oval with an explanation banner
+- **Tyre call** panel: Soft / Medium / Hard / Wet from track temp + rain / path wetness (scoring weather), shows fitted compound when available
+- Flag warnings (radio + dashboard): FCY / safety car, yellow state (pits closed/open, resume), local sector yellow, blue flag, session stop, green after FCY
+- **Session reports** at end of live session: Markdown + JSON under `Reports/` (and `%LocalAppData%\RaceIngenior\Reports`) with track/car, tyre warmup, wear, fuel/VE, track+air temps (start/end/min/max/avg), weather, flags
+- Telemetry panel shows live **track** and **air** temperatures
+- End-of-session report opens in-app (Settings: “Automatically open end-of-session report”, on by default)
+- Session report saves only on GamePhase **8** (Session over) — not pit entry or phase 7
+- If still on track at session over, report waits until the **finish line** (or pits / DNF / disconnect)
+
+### Changed
+
+- Offline tyre-wear callouts: info below 70% remaining, warning below 50%, critical below 30% (was critical only at 15%)
+- Gemini key is configured in the dashboard only; users no longer edit `secrets/` under the app folder
+- Session panel shows the real game-phase name (e.g. “Green flag (5)”) instead of “Phase X”
+- Hypercar **Virtual Energy** from LMU REST `RepairAndRefuel` (`fuelInfo` current/max → %), not the old strategy/usage-only path
+- In-app session report is a **FIA WEC timing-board** layout (section bars, cells) instead of raw Markdown; `.md` files still saved
+- **REPORTS** browser (header + tray): list past sessions and open any saved report in-app
+- Lap times shown as motorsport **`m:ss.mmm`** (e.g. `1:40.737`) on dashboard, reports, and Markdown export
+- **RECORDS** board: personal best lap per track and car (seeded from session reports, updated on session end)
+
+### Notes
+
+- Assembly / file version: `0.0.1.4`. Informational version: `0.0.1.4-dev`.
+- Repo may still keep `secrets/gemini_api_key.example.txt` for developers; it is not required for end users.
+
 ## [0.0.1.3-dev] — 2026-10-12
 
 ### Added

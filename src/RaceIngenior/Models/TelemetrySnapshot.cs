@@ -14,8 +14,34 @@ public sealed class TelemetrySnapshot
 
     public int Session { get; init; }
     public byte GamePhase { get; init; }
+
+    /// <summary>English label for UI, e.g. "Green flag (5)". Unknown codes keep the number only.</summary>
+    public string GamePhaseDisplay => FormatGamePhase(GamePhase);
+
+    public static string FormatGamePhase(byte phase) => phase switch
+    {
+        0 => "Garage (0)",
+        1 => "Warm-up (1)",
+        2 => "Grid walk (2)",
+        3 => "Formation (3)",
+        4 => "Countdown (4)",
+        5 => "Green flag (5)",
+        6 => "Full course yellow (6)",
+        7 => "Session stopped (7)",
+        8 => "Session over (8)",
+        9 => "Paused (9)",
+        _ => $"Unknown ({phase})",
+    };
     public sbyte YellowFlagState { get; init; }
     public bool UnderYellow { get; init; }
+    /// <summary>Local yellow per sector index (0=S3, 1=S1, 2=S2) — non-zero = yellow.</summary>
+    public sbyte[] SectorFlags { get; init; } = [0, 0, 0];
+    /// <summary>Primary flag shown to the player: 0=green, 6=blue (rF2).</summary>
+    public byte PrimaryFlag { get; init; }
+    public bool HasLocalYellow =>
+        SectorFlags.Length >= 3 && (SectorFlags[0] > 0 || SectorFlags[1] > 0 || SectorFlags[2] > 0);
+    public bool IsBlueFlag => PrimaryFlag == 6;
+    public bool IsFullCourseYellow => GamePhase == 6;
     public bool InPits { get; init; }
     public bool InGarage { get; init; }
     public byte PitState { get; init; }
@@ -41,6 +67,10 @@ public sealed class TelemetrySnapshot
 
     public int Place { get; init; }
     public int Lap { get; init; }
+    /// <summary>rF2/LMU <c>mFinishStatus</c>: 0=none, 1=finished, 2=dnf, 3=dq.</summary>
+    public sbyte FinishStatus { get; init; }
+    public bool HasFinishedRace => FinishStatus == 1;
+    public bool IsOutOfSession => FinishStatus is 2 or 3;
     public int Gear { get; init; }
     public double SpeedKmh { get; init; }
     public double Rpm { get; init; }
@@ -57,9 +87,25 @@ public sealed class TelemetrySnapshot
     public double TimeBehindNext { get; init; }
     public double TimeBehindLeader { get; init; }
     public double LapDistFraction { get; init; }
+    /// <summary>Player world X (meters) from scoring — used to learn track outlines.</summary>
+    public double PlayerWorldX { get; init; }
+    /// <summary>Player world Z (meters) from scoring — used to learn track outlines.</summary>
+    public double PlayerWorldZ { get; init; }
+
+    public double DarkCloud { get; init; }
+    public double Raining { get; init; }
+    public double AmbientTempC { get; init; }
+    public double TrackTempC { get; init; }
+    public double MinPathWetness { get; init; }
+    public double MaxPathWetness { get; init; }
+    public double AvgPathWetness { get; init; }
+    public string FrontTireCompound { get; init; } = "";
+    public string RearTireCompound { get; init; } = "";
 
     public WheelTemps Wheels { get; init; } = new();
     public List<NearbyCar> Nearby { get; init; } = [];
+    /// <summary>Full field for the relative track map (lap-distance positions).</summary>
+    public List<TrackCar> Field { get; init; } = [];
 
     public double? VirtualEnergy { get; init; }
     public string? RestNotes { get; init; }
@@ -106,4 +152,15 @@ public sealed class NearbyCar
     public int Place { get; init; }
     public double RelativeLapDist { get; init; }
     public string Side { get; init; } = "";
+}
+
+/// <summary>Car on the relative track map (0–1 lap distance).</summary>
+public sealed class TrackCar
+{
+    public string Name { get; init; } = "";
+    public string VehicleClass { get; init; } = "";
+    public int Place { get; init; }
+    public double LapDistFraction { get; init; }
+    public bool IsPlayer { get; init; }
+    public bool InPits { get; init; }
 }

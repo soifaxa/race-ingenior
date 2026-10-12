@@ -1,5 +1,6 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
+using RaceIngenior.Models;
 using RaceIngenior.Services;
 using RaceIngenior.ViewModels;
 
@@ -9,13 +10,25 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
     private readonly UserPreferencesStore _prefs;
+    private readonly SessionReportService _sessionReports;
+    private readonly TrackRecordsStore _trackRecords;
+    private SettingsWindow? _settingsWindow;
+    private ReportsWindow? _reportsWindow;
+    private RecordsWindow? _recordsWindow;
+    private SessionReportWindow? _reportWindow;
     private bool _restoringPlacement;
     private bool _forceClose;
 
-    public MainWindow(MainViewModel viewModel, UserPreferencesStore prefs)
+    public MainWindow(
+        MainViewModel viewModel,
+        UserPreferencesStore prefs,
+        SessionReportService sessionReports,
+        TrackRecordsStore trackRecords)
     {
         _viewModel = viewModel;
         _prefs = prefs;
+        _sessionReports = sessionReports;
+        _trackRecords = trackRecords;
         InitializeComponent();
         DataContext = viewModel;
         TrayIcon.Icon = System.Drawing.SystemIcons.Information;
@@ -25,11 +38,36 @@ public partial class MainWindow : Window
         SizeChanged += (_, _) => PersistPlacement();
         StateChanged += (_, _) => PersistPlacement();
         Closing += OnClosing;
+        _viewModel.OpenSessionReportRequested += OpenSessionReport;
+    }
+
+    private void OpenSessionReport(string path, SessionReport report)
+    {
+        if (_reportWindow is not null)
+        {
+            _reportWindow.Close();
+            _reportWindow = null;
+        }
+
+        _reportWindow = new SessionReportWindow(path, report)
+        {
+            Owner = IsVisible ? this : null
+        };
+        _reportWindow.Closed += (_, _) => _reportWindow = null;
+        _reportWindow.Show();
+        _reportWindow.Activate();
+        _reportsWindow?.RefreshList();
     }
 
     private void TrayIcon_OnTrayMouseDoubleClick(object sender, RoutedEventArgs e) => ShowDashboard();
 
     private void Show_Click(object sender, RoutedEventArgs e) => ShowDashboard();
+
+    private void Settings_Click(object sender, RoutedEventArgs e) => OpenSettings();
+
+    private void Reports_Click(object sender, RoutedEventArgs e) => OpenReports();
+
+    private void Records_Click(object sender, RoutedEventArgs e) => OpenRecords();
 
     private void Hide_Click(object sender, RoutedEventArgs e)
     {
@@ -39,6 +77,61 @@ public partial class MainWindow : Window
 
     private void Overlay_Click(object sender, RoutedEventArgs e) =>
         _viewModel.ToggleOverlayCommand.Execute(null);
+
+    private void OpenReports()
+    {
+        if (_reportsWindow is not null)
+        {
+            _reportsWindow.RefreshList();
+            _reportsWindow.Activate();
+            return;
+        }
+
+        var vm = new ReportsBrowserViewModel(_sessionReports);
+        _reportsWindow = new ReportsWindow(vm)
+        {
+            Owner = IsVisible ? this : null
+        };
+        _reportsWindow.OpenReportRequested += OpenSessionReport;
+        _reportsWindow.Closed += (_, _) => _reportsWindow = null;
+        _reportsWindow.Show();
+        _reportsWindow.Activate();
+    }
+
+    private void OpenRecords()
+    {
+        if (_recordsWindow is not null)
+        {
+            _recordsWindow.RefreshList();
+            _recordsWindow.Activate();
+            return;
+        }
+
+        var vm = new RecordsBrowserViewModel(_trackRecords, _sessionReports);
+        _recordsWindow = new RecordsWindow(vm)
+        {
+            Owner = IsVisible ? this : null
+        };
+        _recordsWindow.Closed += (_, _) => _recordsWindow = null;
+        _recordsWindow.Show();
+        _recordsWindow.Activate();
+    }
+
+    private void OpenSettings()
+    {
+        if (_settingsWindow is not null)
+        {
+            _settingsWindow.Activate();
+            return;
+        }
+
+        _settingsWindow = new SettingsWindow(_viewModel)
+        {
+            Owner = IsVisible ? this : null
+        };
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Show();
+    }
 
     private void Restart_Click(object sender, RoutedEventArgs e) =>
         _viewModel.RestartAppCommand.Execute(null);

@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Options;
 using RaceIngenior.Models;
 using RaceIngenior.Radio;
 using RaceIngenior.Services;
@@ -21,7 +22,10 @@ public partial class MainViewModel : ObservableObject
     private readonly EngineerMemory _memory;
     private readonly UserPreferencesStore _prefs;
     private readonly OverlayService _overlay;
-    private readonly StartupInfo _startup;
+    private readonly TrackLayoutStore _trackLayouts;
+    private readonly TrackLayoutLearner _trackLearner;
+    private readonly SessionReportService _sessionReports;
+    private readonly AppSettings _settings;
     private bool _speechRateReady;
 
     [ObservableProperty] private string _connectionStatus = "Waiting for LMU…";
@@ -42,7 +46,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _lastEngineer = "";
     [ObservableProperty] private string _geminiStatus = "";
     [ObservableProperty] private string _memoryStatus = "";
-    [ObservableProperty] private string _apiKeyPath = "";
+    [ObservableProperty] private string _geminiApiKeyInput = "";
     [ObservableProperty] private PttDeviceOption? _selectedDevice;
     [ObservableProperty] private int _selectedButtonIndex;
     [ObservableProperty] private string _learnButtonLabel = "Detect button";
@@ -54,8 +58,25 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _overlayForceShow;
     [ObservableProperty] private int _conversationOverlaySeconds = 8;
     [ObservableProperty] private string _appVersion = "";
+    [ObservableProperty] private IReadOnlyList<TrackCar> _trackCars = Array.Empty<TrackCar>();
+    [ObservableProperty] private TrackLayout? _currentTrackLayout;
+    [ObservableProperty] private string _trackMapStatus = "";
+    [ObservableProperty] private string _trackMapModeLabel = "OVAL";
+    [ObservableProperty] private string _tireRecommended = "—";
+    [ObservableProperty] private string _tireConditionLabel = "NO DATA";
+    [ObservableProperty] private string _tireAdviceReason = "";
+    [ObservableProperty] private string _tireFitted = "—";
+    [ObservableProperty] private string _weatherTrackTemp = "—";
+    [ObservableProperty] private string _weatherAmbientTemp = "—";
+    [ObservableProperty] private string _weatherRain = "—";
+    [ObservableProperty] private string _weatherWetness = "—";
+    [ObservableProperty] private string _weatherCloud = "—";
+    [ObservableProperty] private string _flagStatus = "GREEN";
+    [ObservableProperty] private string _flagDetail = "No flags";
+    [ObservableProperty] private bool _autoOpenSessionReport = true;
 
     public ObservableCollection<string> LogLines { get; } = [];
+    public event Action<string, SessionReport>? OpenSessionReportRequested;
     public ObservableCollection<PttDeviceOption> PttDevices { get; } = [];
     public ObservableCollection<int> ButtonIndexes { get; } = new(Enumerable.Range(0, 32));
     public ObservableCollection<int> ConversationOverlayDurations { get; } = new([5, 8, 10]);
@@ -69,7 +90,10 @@ public partial class MainViewModel : ObservableObject
         EngineerMemory memory,
         UserPreferencesStore prefs,
         OverlayService overlay,
-        StartupInfo startup)
+        TrackLayoutStore trackLayouts,
+        TrackLayoutLearner trackLearner,
+        SessionReportService sessionReports,
+        IOptions<AppSettings> settings)
     {
         _hub = hub;
         _radio = radio;
@@ -79,18 +103,19 @@ public partial class MainViewModel : ObservableObject
         _memory = memory;
         _prefs = prefs;
         _overlay = overlay;
-        _startup = startup;
+        _trackLayouts = trackLayouts;
+        _trackLearner = trackLearner;
+        _sessionReports = sessionReports;
+        _settings = settings.Value;
 
         AppVersion = ResolveAppVersion();
-        ApiKeyPath = _startup.ApiKeyFilePath;
-        GeminiStatus = _llm.IsConfigured
-            ? $"Key loaded · model {_llm.ModelName} · click Test Gemini"
-            : $"Missing key — paste into {_startup.ApiKeyFilePath}";
+        RefreshGeminiStatus();
         SelectedButtonIndex = _ptt.ButtonOffset;
         SpeechRate = _tts.Rate;
         OverlayClickThrough = _prefs.Current.OverlayClickThrough;
         OverlayForceShow = _prefs.Current.OverlayForceShow;
         ConversationOverlaySeconds = _prefs.Current.ConversationOverlaySeconds;
+        AutoOpenSessionReport = _prefs.IsAutoOpenSessionReportEnabled;
         UpdateSpeechRateLabel();
         UpdateOverlayLabel();
         _speechRateReady = true;
@@ -100,6 +125,9 @@ public partial class MainViewModel : ObservableObject
         _hub.Updated += OnTelemetry;
         _radio.LogLine += OnLog;
         _ptt.BindingChanged += OnPttBindingChanged;
+        _trackLayouts.LayoutSaved += OnTrackLayoutSaved;
+        _trackLearner.StatusChanged += OnTrackLearnerStatusChanged;
+        _sessionReports.ReportSaved += OnSessionReportSaved;
         OnTelemetry(_hub.Latest);
         OnPttBindingChanged();
     }
@@ -169,9 +197,13 @@ public partial class MainViewModel : ObservableObject
             Place = snap.Connected ? $"P{snap.Place}  Lap {snap.Lap}" : "—";
             Fuel = snap.Connected ? $"{snap.FuelL:0.0} / {snap.FuelCapacityL:0.0} L" : "—";
             Speed = snap.Connected ? $"{snap.SpeedKmh:0} km/h  {snap.Rpm:0} rpm" : "—";
-            LastLap = snap.Connected ? $"{snap.LastLap:0.000} (best {snap.BestLap:0.000})" : "—";
-            Phase = snap.Connected ? $"Phase {snap.GamePhase}  Yel {snap.YellowFlagState}" : "—";
-            Energy = snap.VirtualEnergy is double e ? $"{e:0.0}" : (snap.RestNotes ?? "—");
+            LastLap = snap.Connected
+                ? $"{LapTimeFormat.Format(snap.LastLap)}  (best {LapTimeFormat.Format(snap.BestLap)})"
+                : "—";
+            Phase = snap.Connected ? snap.GamePhaseDisplay : "—";
+            Energy = snap.VirtualEnergy is double e
+                ? $"{e:0.0} %"
+                : (snap.RestNotes ?? "—");
             Tires = snap.Connected
                 ? FormatTireWear(snap.Wheels)
                 : "—";
@@ -183,6 +215,10 @@ public partial class MainViewModel : ObservableObject
                 : "—";
             LastDriver = _radio.LastDriverText;
             LastEngineer = _radio.LastEngineerText;
+            SyncFlags(snap);
+            SyncTrackCars(snap);
+            SyncTrackLayout(snap);
+            SyncTireAdvice(snap);
             RefreshMemoryStatus();
         }
 
@@ -273,8 +309,49 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void SaveGeminiApiKey()
+    {
+        var key = GeminiApiKeyInput?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            GeminiStatus = "Paste a Gemini API key, then Save";
+            return;
+        }
+
+        _settings.GeminiApiKey = key;
+        _prefs.SaveGeminiApiKey(key);
+        GeminiApiKeyInput = "";
+        RefreshGeminiStatus();
+        LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Gemini API key saved");
+    }
+
+    [RelayCommand]
+    private void ClearGeminiApiKey()
+    {
+        _settings.GeminiApiKey = "";
+        _prefs.SaveGeminiApiKey(null);
+        GeminiApiKeyInput = "";
+        RefreshGeminiStatus();
+        LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Gemini API key cleared");
+    }
+
+    private void RefreshGeminiStatus()
+    {
+        GeminiStatus = _llm.IsConfigured
+            ? $"Key saved · model {_llm.ModelName} · click Test Gemini"
+            : "No key — paste your Gemini API key below and Save";
+    }
+
+    [RelayCommand]
     private async Task TestGeminiAsync()
     {
+        if (!_llm.IsConfigured)
+        {
+            RefreshGeminiStatus();
+            LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Gemini FAILED: no API key saved");
+            return;
+        }
+
         GeminiStatus = "Testing Gemini…";
         LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Testing Gemini ({_llm.ModelName})…");
 
@@ -373,6 +450,182 @@ public partial class MainViewModel : ObservableObject
         }
 
         System.Windows.Application.Current.Shutdown();
+    }
+
+    private void SyncTrackCars(TelemetrySnapshot snap) =>
+        TrackCars = snap.Connected && snap.Field.Count > 0
+            ? snap.Field
+            : Array.Empty<TrackCar>();
+
+    private void SyncTireAdvice(TelemetrySnapshot snap)
+    {
+        var advice = TireCompoundAdvisor.Evaluate(snap);
+        TireRecommended = advice.Recommended;
+        TireConditionLabel = advice.ConditionLabel;
+        TireAdviceReason = advice.Reason;
+        TireFitted = advice.Fitted;
+        WeatherTrackTemp = advice.TrackTempText;
+        WeatherAmbientTemp = advice.AmbientTempText;
+        WeatherRain = advice.RainText;
+        WeatherWetness = advice.WetnessText;
+        WeatherCloud = advice.CloudText;
+    }
+
+    private void SyncFlags(TelemetrySnapshot snap)
+    {
+        if (!snap.Connected)
+        {
+            FlagStatus = "—";
+            FlagDetail = "No telemetry";
+            return;
+        }
+
+        if (snap.GamePhase == 7)
+        {
+            FlagStatus = "RED / STOP";
+            FlagDetail = "Session stopped";
+            return;
+        }
+
+        if (snap.IsFullCourseYellow)
+        {
+            FlagStatus = "FCY";
+            FlagDetail = DescribeYellowDetail(snap.YellowFlagState);
+            return;
+        }
+
+        if (snap.IsBlueFlag)
+        {
+            FlagStatus = "BLUE";
+            FlagDetail = "Let faster traffic past";
+            return;
+        }
+
+        if (snap.HasLocalYellow)
+        {
+            var sectors = new List<string>(3);
+            if (snap.SectorFlags.Length > 1 && snap.SectorFlags[1] > 0) sectors.Add("S1");
+            if (snap.SectorFlags.Length > 2 && snap.SectorFlags[2] > 0) sectors.Add("S2");
+            if (snap.SectorFlags.Length > 0 && snap.SectorFlags[0] > 0) sectors.Add("S3");
+            FlagStatus = "LOCAL YELLOW";
+            FlagDetail = sectors.Count == 0 ? "Caution on track" : string.Join(" · ", sectors);
+            return;
+        }
+
+        if (snap.YellowFlagState > 0)
+        {
+            FlagStatus = "YELLOW";
+            FlagDetail = DescribeYellowDetail(snap.YellowFlagState);
+            return;
+        }
+
+        FlagStatus = "GREEN";
+        FlagDetail = "No flags";
+    }
+
+    private static string DescribeYellowDetail(sbyte state) => state switch
+    {
+        1 => "Pending",
+        2 => "Pits closed",
+        3 => "Pit lead lap",
+        4 => "Pits open",
+        5 => "Last SC lap",
+        6 => "Resume / restart",
+        7 => "Race halt",
+        _ => $"State {state}"
+    };
+
+    private void SyncTrackLayout(TelemetrySnapshot snap)
+    {
+        if (!snap.Connected || string.IsNullOrWhiteSpace(snap.Track))
+        {
+            CurrentTrackLayout = null;
+            TrackMapModeLabel = "OVAL";
+            TrackMapStatus = "Connect to LMU to load or learn a track layout.";
+            return;
+        }
+
+        var layout = _trackLayouts.TryGet(snap.Track);
+        CurrentTrackLayout = layout;
+
+        if (layout?.HasOutline == true)
+        {
+            TrackMapModeLabel = "LEARNED";
+            TrackMapStatus = "";
+            return;
+        }
+
+        TrackMapModeLabel = "OVAL";
+        TrackMapStatus =
+            $"No learned layout for “{snap.Track}” yet — showing a temporary oval. " +
+            "Developers: drive full on-track laps (not in pits) to record the outline; " +
+            "it is saved under Tracks/ so everyone can use it. " +
+            _trackLearner.Status;
+    }
+
+    private void OnTrackLayoutSaved(TrackLayout layout)
+    {
+        void Apply()
+        {
+            CurrentTrackLayout = layout;
+            TrackMapModeLabel = "LEARNED";
+            TrackMapStatus = "";
+            LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Track layout saved: {layout.DisplayName} ({layout.Points.Count} pts)");
+        }
+
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+            Apply();
+        else
+            _ = dispatcher.InvokeAsync(Apply);
+    }
+
+    private void OnTrackLearnerStatusChanged()
+    {
+        void Apply()
+        {
+            if (CurrentTrackLayout?.HasOutline == true)
+                return;
+            if (string.IsNullOrWhiteSpace(Track) || Track == "—")
+                return;
+
+            TrackMapStatus =
+                $"No learned layout for “{Track}” yet — showing a temporary oval. " +
+                "Developers: drive full on-track laps (not in pits) to record the outline; " +
+                "it is saved under Tracks/ so everyone can use it. " +
+                _trackLearner.Status;
+        }
+
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+            Apply();
+        else
+            _ = dispatcher.InvokeAsync(Apply);
+    }
+
+    partial void OnAutoOpenSessionReportChanged(bool value)
+    {
+        if (!_speechRateReady)
+            return;
+        _prefs.SaveAutoOpenSessionReport(value);
+    }
+
+    private void OnSessionReportSaved(string path, SessionReport report)
+    {
+        void Apply()
+        {
+            LogLines.Insert(0,
+                $"[{DateTime.Now:HH:mm:ss}] Session report saved · {report.Track} · {report.LapsCompleted} laps → {path}");
+
+            if (AutoOpenSessionReport)
+                OpenSessionReportRequested?.Invoke(path, report);
+        }
+
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+            Apply();
+        else
+            _ = dispatcher.InvokeAsync(Apply);
     }
 
     private static string FormatTireWear(WheelTemps w)
