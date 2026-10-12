@@ -16,6 +16,15 @@ public sealed class PttDeviceOption
 
 public sealed class WheelPttService : BackgroundService
 {
+    /// <summary>Button poll interval while a device is acquired (responsive PTT).</summary>
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(15);
+
+    /// <summary>
+    /// DirectInput device enumeration is expensive on Windows and can stall the machine
+    /// if hammered when no wheel is present — only re-scan this often while searching.
+    /// </summary>
+    private static readonly TimeSpan DeviceSearchInterval = TimeSpan.FromSeconds(2);
+
     private readonly ILogger<WheelPttService> _logger;
     private readonly UserPreferencesStore _prefs;
     private readonly DirectInput _directInput = new();
@@ -30,6 +39,7 @@ public sealed class WheelPttService : BackgroundService
     private bool _wasPressed;
     private bool _learning;
     private DateTimeOffset _learnStarted;
+    private DateTimeOffset _nextDeviceSearch = DateTimeOffset.MinValue;
 
     public event Action? PttPressed;
     public event Action? PttReleased;
@@ -80,6 +90,8 @@ public sealed class WheelPttService : BackgroundService
             _preferredGuid = deviceGuid is { } g && g != Guid.Empty ? g : null;
             _learning = false;
             DisposeJoystick();
+            // Re-bind promptly after the user picks a device / button.
+            _nextDeviceSearch = DateTimeOffset.MinValue;
         }
 
         if (persist)
@@ -119,7 +131,15 @@ public sealed class WheelPttService : BackgroundService
             try
             {
                 if (_joystick is null)
-                    TryBindDevice();
+                {
+                    var now = DateTimeOffset.UtcNow;
+                    if (now >= _nextDeviceSearch)
+                    {
+                        TryBindDevice();
+                        if (_joystick is null)
+                            _nextDeviceSearch = now + DeviceSearchInterval;
+                    }
+                }
 
                 if (_joystick is not null)
                     Poll();
@@ -128,11 +148,20 @@ public sealed class WheelPttService : BackgroundService
             {
                 _logger.LogDebug(ex, "PTT poll error");
                 DisposeJoystick();
+                _nextDeviceSearch = DateTimeOffset.UtcNow + DeviceSearchInterval;
                 Status = "Wheel disconnected";
                 BindingChanged?.Invoke();
             }
 
-            await Task.Delay(15, stoppingToken);
+            // Keep a short tick only when polling buttons; otherwise sleep until next search.
+            var delay = _joystick is not null
+                ? PollInterval
+                : TimeSpan.FromMilliseconds(Math.Clamp(
+                    (_nextDeviceSearch - DateTimeOffset.UtcNow).TotalMilliseconds,
+                    50,
+                    DeviceSearchInterval.TotalMilliseconds));
+
+            await Task.Delay(delay, stoppingToken);
         }
     }
 
@@ -146,7 +175,12 @@ public sealed class WheelPttService : BackgroundService
         var devices = EnumerateDevices().ToList();
         if (devices.Count == 0)
         {
-            Status = "No wheel/joystick found";
+            if (Status != "No wheel/joystick found")
+            {
+                Status = "No wheel/joystick found";
+                BindingChanged?.Invoke();
+            }
+
             return;
         }
 
