@@ -1,15 +1,19 @@
-# Downloads ggml-tiny.bin for Race Ingenior Whisper STT.
+# Downloads a Whisper ggml model for Race Ingenior STT.
 # Default targets (outside bin/):
-#   1) <repo>/Models/ggml-tiny.bin
-#   2) %LocalAppData%\RaceIngenior\Models\ggml-tiny.bin
+#   1) <repo>/Models/ggml-<size>.bin
+#   2) %LocalAppData%\RaceIngenior\Models\ggml-<size>.bin
 #
 # Usage:
-#   .\scripts\install-whisper-model.ps1
+#   .\scripts\install-whisper-model.ps1              # base (recommended)
+#   .\scripts\install-whisper-model.ps1 -Size small  # better FR accuracy, slower
+#   .\scripts\install-whisper-model.ps1 -Size tiny   # fastest, weakest
 #   .\scripts\install-whisper-model.ps1 -Force
 #   .\scripts\install-whisper-model.ps1 -LocalAppDataOnly
 
 [CmdletBinding()]
 param(
+    [ValidateSet("tiny", "base", "small")]
+    [string]$Size = "base",
     [switch]$Force,
     [switch]$LocalAppDataOnly,
     [switch]$RepoOnly
@@ -18,8 +22,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
-$RelativeModel = Join-Path "Models" "ggml-tiny.bin"
-$Url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin"
+$FileName = "ggml-$Size.bin"
+$RelativeModel = Join-Path "Models" $FileName
+$Url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/$FileName"
 
 $targets = [System.Collections.Generic.List[string]]::new()
 if (-not $LocalAppDataOnly) {
@@ -47,7 +52,7 @@ function Install-Model([string]$Destination) {
     }
 
     $tmp = "$Destination.download"
-    Write-Host "Downloading Whisper tiny model..."
+    Write-Host "Downloading Whisper $Size model..."
     Write-Host "  from: $Url"
     Write-Host "  to:   $Destination"
 
@@ -68,5 +73,5 @@ foreach ($path in $targets) {
 }
 
 Write-Host ""
-Write-Host "Whisper model ready. App resolves Models/ggml-tiny.bin from LocalAppData or repo Models/ (not bin/)."
-)
+Write-Host "Whisper $Size ready. Set RaceIngenior:WhisperModelPath to Models/$FileName in appsettings.json."
+Write-Host "App resolves the file from LocalAppData or repo Models/ (not bin/)."

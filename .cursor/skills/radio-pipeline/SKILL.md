@@ -11,9 +11,9 @@ description: >-
 ## Pipeline order
 
 1. `WheelPttService` — SharpDX DirectInput, learn/save binding via `UserPreferencesStore`
-2. `WhisperSttService` — model path from `appsettings` (`WhisperModelPath`); resolves outside `bin/` (LocalAppData / repo `Models/`). Install: `scripts/install-whisper-model.ps1`
+2. `WhisperSttService` — default `Models/ggml-base.bin` (FR + race prompt, trim/AGC); path from `WhisperModelPath`; install: `scripts/install-whisper-model.ps1` (`-Size base|small|tiny`)
 3. `GeminiEngineerService` — key from in-app Save (`UserPreferencesStore` / LocalAppData)
-4. `WindowsTtsService` — French voice preferred; respect speech rate setting
+4. `HybridTtsService` — Gemini neural TTS (`GeminiTtsModel`) when key present; else `WindowsTtsService` OneCore
 5. Fallback: `RuleEngineService` when Gemini unavailable or empty
 
 Orchestrator: `RadioPipelineService`. Context: `TelemetryPromptBuilder` + `EngineerMemory`.
@@ -38,8 +38,8 @@ Orchestrator: `RadioPipelineService`. Context: `TelemetryPromptBuilder` + `Engin
 | LLM | `Radio/GeminiEngineerService.cs`, `Radio/TelemetryPromptBuilder.cs` |
 | Offline callouts | `Radio/RuleEngineService.cs` |
 | Memory | `Radio/EngineerMemory.cs` |
-| PTT | `Radio/WheelPttService.cs`, prefs store |
-| STT / TTS | `WhisperSttService.cs`, `WindowsTtsService.cs` |
+| PTT | `Radio/WheelPttService.cs`, `Radio/RadioBeepService.cs`, prefs store |
+| STT / TTS | `WhisperSttService.cs`, `HybridTtsService.cs`, `GeminiTtsClient.cs`, `WindowsTtsService.cs` |
 | UI bindings | `ViewModels/MainViewModel.cs` |
 
 ## Verify

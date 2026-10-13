@@ -6,12 +6,16 @@ public sealed class AppSettings
 
     public string GeminiApiKey { get; set; } = "";
     public string GeminiModel { get; set; } = "gemini-3.6-flash";
+    /// <summary>Dedicated TTS model (neural speech). Separate from chat model.</summary>
+    public string GeminiTtsModel { get; set; } = "gemini-2.5-flash-preview-tts";
     public string LmuRestBaseUrl { get; set; } = "http://localhost:6397";
-    public string WhisperModelPath { get; set; } = "Models/ggml-tiny.bin";
+    /// <summary>Whisper ggml path. Prefer base/small over tiny for French PTT accuracy.</summary>
+    public string WhisperModelPath { get; set; } = "Models/ggml-base.bin";
     public string OutputDeviceHint { get; set; } = "";
     public int? PttJoystickOffset { get; set; }
     public string? PttDeviceNameContains { get; set; }
-    public string PreferredFrenchVoiceContains { get; set; } = "French";
+    /// <summary>Hint when auto-picking (e.g. Julie, Denise, Natural).</summary>
+    public string PreferredFrenchVoiceContains { get; set; } = "Julie";
     public double TelemetryPollMs { get; set; } = 100;
     public double RulesPollMs { get; set; } = 250;
     public int MaxOutputTokens { get; set; } = 256;

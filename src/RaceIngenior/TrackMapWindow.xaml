@@ -94,7 +94,7 @@
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="12"/>
-          <ColumnDefinition Width="420" MinWidth="320"/>
+          <ColumnDefinition Width="520" MinWidth="400"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Column="0" Background="#121212" BorderBrush="#1F1F1F" BorderThickness="0,1,0,0">
           <controls:TrackMapControl Cars="{Binding TrackCars}"

@@ -5,6 +5,24 @@ All notable changes to Race Ingenior are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease label on the informational version.
 
+## [0.0.1.6-dev] — 2026-10-13
+
+### Added
+
+- Gemini **neural TTS** (same API key; default Charon) with Windows OneCore fallback; **RADIO VOICE** picker in Settings
+- PTT radio beeps (open before mic / close after stop); toggle in Settings
+- PTT STT: Whisper **base** (was tiny), French race-radio prompt, silence trim + mic AGC
+
+### Changed
+
+- Wider standings **DRIVER** column (dashboard + track-map panel)
+- Target framework `net8.0-windows10.0.19041.0` for WinRT speech APIs
+
+### Notes
+
+- Assembly / file version: `0.0.1.6`. Informational version: `0.0.1.6-dev`.
+- Whisper install: `.\scripts\install-whisper-model.ps1` (default base; `-Size small` optional)
+
 ## [0.0.1.5-dev] — 2026-10-13
 
 ### Added

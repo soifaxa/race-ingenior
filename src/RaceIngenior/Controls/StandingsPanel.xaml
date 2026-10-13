@@ -27,12 +27,12 @@
         <ColumnDefinition Width="28"/>
         <ColumnDefinition Width="4"/>
         <ColumnDefinition Width="32"/>
-        <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="44"/>
-        <ColumnDefinition Width="72"/>
-        <ColumnDefinition Width="72"/>
-        <ColumnDefinition Width="64"/>
+        <ColumnDefinition Width="*" MinWidth="160"/>
         <ColumnDefinition Width="40"/>
+        <ColumnDefinition Width="58"/>
+        <ColumnDefinition Width="58"/>
+        <ColumnDefinition Width="52"/>
+        <ColumnDefinition Width="36"/>
       </Grid.ColumnDefinitions>
       <TextBlock Grid.Column="0" Text="P" Foreground="#555555" FontSize="9" FontWeight="Bold"
                  VerticalAlignment="Center" HorizontalAlignment="Center"/>
@@ -89,12 +89,12 @@
                   <ColumnDefinition Width="28"/>
                   <ColumnDefinition Width="4"/>
                   <ColumnDefinition Width="32"/>
-                  <ColumnDefinition Width="*"/>
-                  <ColumnDefinition Width="44"/>
-                  <ColumnDefinition Width="72"/>
-                  <ColumnDefinition Width="72"/>
-                  <ColumnDefinition Width="64"/>
+                  <ColumnDefinition Width="*" MinWidth="160"/>
                   <ColumnDefinition Width="40"/>
+                  <ColumnDefinition Width="58"/>
+                  <ColumnDefinition Width="58"/>
+                  <ColumnDefinition Width="52"/>
+                  <ColumnDefinition Width="36"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="{Binding PlaceText}"
                            Foreground="#F2F2F2" FontSize="13" FontWeight="Bold"

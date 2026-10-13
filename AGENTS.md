@@ -18,8 +18,9 @@ Core project conventions always apply via `.cursor/rules/race-ingenior-core.mdc`
 
 ```powershell
 dotnet build src/RaceIngenior/RaceIngenior.csproj -c Debug
-& "src\RaceIngenior\bin\Debug\net8.0-windows\RaceIngenior.exe"
-.\scripts\install-whisper-model.ps1   # ggml-tiny.bin → Models/ + LocalAppData (not in repo)
+& "src\RaceIngenior\bin\Debug\net8.0-windows10.0.19041.0\RaceIngenior.exe"
+.\scripts\install-whisper-model.ps1          # ggml-base.bin (default) → Models/ + LocalAppData
+.\scripts\install-whisper-model.ps1 -Size small  # better FR PTT, slower
 ```
 
 Track maps: drive full on-track laps to learn outlines into `Tracks/*.json` (committed for everyone). Unknown circuits fall back to an oval map with a banner.

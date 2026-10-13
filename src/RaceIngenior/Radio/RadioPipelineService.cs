@@ -8,6 +8,7 @@ public sealed class RadioPipelineService : IHostedService
 {
     private readonly WheelPttService _ptt;
     private readonly MicRecorder _mic = new();
+    private readonly RadioBeepService _beeps;
     private readonly ISttService _stt;
     private readonly IEngineerLlm _llm;
     private readonly ITtsService _tts;
@@ -16,6 +17,7 @@ public sealed class RadioPipelineService : IHostedService
     private readonly TelemetryHub _hub;
     private readonly ILogger<RadioPipelineService> _logger;
     private int _processing;
+    private int _pttOpenSeq;
 
     public event Action<string>? LogLine;
     /// <summary>Raised when a driver/engineer exchange (or alert) is ready for UI overlays.</summary>
@@ -26,6 +28,7 @@ public sealed class RadioPipelineService : IHostedService
 
     public RadioPipelineService(
         WheelPttService ptt,
+        RadioBeepService beeps,
         ISttService stt,
         IEngineerLlm llm,
         ITtsService tts,
@@ -35,6 +38,7 @@ public sealed class RadioPipelineService : IHostedService
         ILogger<RadioPipelineService> logger)
     {
         _ptt = ptt;
+        _beeps = beeps;
         _stt = stt;
         _llm = llm;
         _tts = tts;
@@ -66,14 +70,37 @@ public sealed class RadioPipelineService : IHostedService
     {
         Mode = "PTT listening";
         Emit("PTT down — recording");
-        _mic.Start();
+        // Beep before mic so the tone is not captured by Whisper.
+        var seq = Interlocked.Increment(ref _pttOpenSeq);
+        _ = OpenPttAsync(seq);
+    }
+
+    private async Task OpenPttAsync(int seq)
+    {
+        try
+        {
+            await _beeps.PlayOpenAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "PTT open beep failed");
+        }
+
+        // Abandoned if user already released (or pressed again).
+        if (seq != Volatile.Read(ref _pttOpenSeq) || !_ptt.IsPressed)
+            return;
+
+        if (!_mic.IsRecording)
+            _mic.Start();
     }
 
     private void OnPttReleased()
     {
+        Interlocked.Increment(ref _pttOpenSeq);
         var wav = _mic.Stop();
         Mode = "Processing";
         Emit("PTT up — transcribing");
+        _ = _beeps.PlayCloseAsync();
         _ = HandlePttAsync(wav);
     }
 

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -11,10 +11,10 @@
     <AssemblyName>RaceIngenior</AssemblyName>
     <ApplicationIcon />
     <LangVersion>latest</LangVersion>
-    <Version>0.0.1.5</Version>
-    <AssemblyVersion>0.0.1.5</AssemblyVersion>
-    <FileVersion>0.0.1.5</FileVersion>
-    <InformationalVersion>0.0.1.5-dev</InformationalVersion>
+    <Version>0.0.1.6</Version>
+    <AssemblyVersion>0.0.1.6</AssemblyVersion>
+    <FileVersion>0.0.1.6</FileVersion>
+    <InformationalVersion>0.0.1.6-dev</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +25,6 @@
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
     <PackageReference Include="SharpVectors.Wpf" Version="1.8.4" />
-    <PackageReference Include="System.Speech" Version="8.0.0" />
     <PackageReference Include="Whisper.net" Version="1.9.1" />
     <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
   </ItemGroup>

@@ -213,15 +213,31 @@
           </DockPanel>
           <Button Style="{StaticResource WecButton}" Content="SAVE PTT BINDING"
                   Command="{Binding SavePttBindingCommand}"
-                  HorizontalAlignment="Left" Margin="0,0,0,16"/>
+                  HorizontalAlignment="Left" Margin="0,0,0,8"/>
+          <CheckBox Content="PTT radio beeps (open / close)"
+                    IsChecked="{Binding PttBeepEnabled}"
+                    Foreground="#F2F2F2" Margin="0,0,0,16"
+                    ToolTip="Short tones when you press and release Push-to-Talk (open beep plays before the mic starts)"/>
 
-          <TextBlock Style="{StaticResource Meta}" Text="SPEECH RATE"/>
-          <DockPanel Margin="0,0,0,16">
-            <TextBlock DockPanel.Dock="Right" Text="{Binding SpeechRateLabel}"
-                       Foreground="#F2F2F2" VerticalAlignment="Center" MinWidth="72" FontWeight="Bold"/>
-            <Slider Minimum="-10" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True"
-                    Value="{Binding SpeechRate, Mode=TwoWay}" VerticalAlignment="Center"/>
-          </DockPanel>
+          <Border BorderBrush="#333333" BorderThickness="0,1,0,0" Padding="0,14,0,0" Margin="0,0,0,16">
+            <StackPanel>
+              <TextBlock Text="RADIO VOICE" Foreground="#E10600" FontSize="11" FontWeight="Bold" Margin="0,0,0,8"/>
+              <TextBlock Style="{StaticResource Meta}" Text="VOICE"/>
+              <ComboBox Style="{StaticResource WecCombo}" Margin="0,0,0,4"
+                        ItemsSource="{Binding TtsVoices}"
+                        SelectedItem="{Binding SelectedTtsVoice}"
+                        DisplayMemberPath="DisplayName"/>
+              <TextBlock Text="Neural = Gemini (needs API key). Windows = offline fallback."
+                         Foreground="#666666" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
+              <TextBlock Style="{StaticResource Meta}" Text="SPEECH RATE"/>
+              <DockPanel>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding SpeechRateLabel}"
+                           Foreground="#F2F2F2" VerticalAlignment="Center" MinWidth="72" FontWeight="Bold"/>
+                <Slider Minimum="-10" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True"
+                        Value="{Binding SpeechRate, Mode=TwoWay}" VerticalAlignment="Center"/>
+              </DockPanel>
+            </StackPanel>
+          </Border>
 
           <TextBlock Style="{StaticResource Meta}" Text="OVERLAY"/>
           <StackPanel Orientation="Horizontal" Margin="0,0,0,6">

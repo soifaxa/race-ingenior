@@ -10,7 +10,9 @@ public sealed class UserPreferences
     public int PttJoystickOffset { get; set; }
     public string? PttDeviceNameContains { get; set; }
     public string? PttDeviceInstanceGuid { get; set; }
-    public int TtsRate { get; set; } = 1;
+    public int TtsRate { get; set; } = 0;
+    /// <summary>WinRT voice Id; null/empty = auto-pick best French voice.</summary>
+    public string? TtsVoiceId { get; set; }
     public bool OverlayVisible { get; set; }
     public double? OverlayLeft { get; set; }
     public double? OverlayTop { get; set; }
@@ -31,6 +33,8 @@ public sealed class UserPreferences
     public string? GeminiApiKey { get; set; }
     /// <summary>Null = default on. When true/null, open the session report window at session end.</summary>
     public bool? AutoOpenSessionReport { get; set; }
+    /// <summary>Null = default on. Radio open/close beeps on PTT.</summary>
+    public bool? PttBeepEnabled { get; set; }
 }
 
 public sealed class UserPreferencesStore
@@ -77,9 +81,23 @@ public sealed class UserPreferencesStore
         Persist();
     }
 
+    public bool IsPttBeepEnabled => Current.PttBeepEnabled ?? true;
+
+    public void SavePttBeepEnabled(bool enabled)
+    {
+        Current.PttBeepEnabled = enabled;
+        Persist();
+    }
+
     public void SaveTtsRate(int rate)
     {
         Current.TtsRate = Math.Clamp(rate, -10, 10);
+        Persist();
+    }
+
+    public void SaveTtsVoiceId(string? voiceId)
+    {
+        Current.TtsVoiceId = string.IsNullOrWhiteSpace(voiceId) ? null : voiceId.Trim();
         Persist();
     }
 

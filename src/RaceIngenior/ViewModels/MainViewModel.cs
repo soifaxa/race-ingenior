@@ -19,6 +19,7 @@ public partial class MainViewModel : ObservableObject
     private readonly WheelPttService _ptt;
     private readonly IEngineerLlm _llm;
     private readonly ITtsService _tts;
+    private readonly RadioBeepService _beeps;
     private readonly EngineerMemory _memory;
     private readonly UserPreferencesStore _prefs;
     private readonly OverlayService _overlay;
@@ -54,7 +55,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _learnButtonLabel = "Detect button";
     [ObservableProperty] private bool _isLearning;
     [ObservableProperty] private int _speechRate;
-    [ObservableProperty] private string _speechRateLabel = "Rate 1";
+    [ObservableProperty] private string _speechRateLabel = "Rate 0";
+    [ObservableProperty] private TtsVoiceOption? _selectedTtsVoice;
     [ObservableProperty] private string _overlayToggleLabel = "Show overlays";
     [ObservableProperty] private bool _overlayClickThrough = true;
     [ObservableProperty] private bool _overlayForceShow;
@@ -78,12 +80,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _flagStatus = "GREEN";
     [ObservableProperty] private string _flagDetail = "No flags";
     [ObservableProperty] private bool _autoOpenSessionReport = true;
+    [ObservableProperty] private bool _pttBeepEnabled = true;
 
     public ObservableCollection<string> LogLines { get; } = [];
     public event Action<string, SessionReport>? OpenSessionReportRequested;
     public ObservableCollection<PttDeviceOption> PttDevices { get; } = [];
     public ObservableCollection<int> ButtonIndexes { get; } = new(Enumerable.Range(0, 32));
     public ObservableCollection<int> ConversationOverlayDurations { get; } = new([5, 8, 10]);
+    public ObservableCollection<TtsVoiceOption> TtsVoices { get; } = [];
 
     public MainViewModel(
         TelemetryHub hub,
@@ -91,6 +95,7 @@ public partial class MainViewModel : ObservableObject
         WheelPttService ptt,
         IEngineerLlm llm,
         ITtsService tts,
+        RadioBeepService beeps,
         EngineerMemory memory,
         UserPreferencesStore prefs,
         OverlayService overlay,
@@ -105,6 +110,7 @@ public partial class MainViewModel : ObservableObject
         _ptt = ptt;
         _llm = llm;
         _tts = tts;
+        _beeps = beeps;
         _memory = memory;
         _prefs = prefs;
         _overlay = overlay;
@@ -122,8 +128,11 @@ public partial class MainViewModel : ObservableObject
         OverlayForceShow = _prefs.Current.OverlayForceShow;
         ConversationOverlaySeconds = _prefs.Current.ConversationOverlaySeconds;
         AutoOpenSessionReport = _prefs.IsAutoOpenSessionReportEnabled;
+        PttBeepEnabled = _prefs.IsPttBeepEnabled;
+        _beeps.Enabled = PttBeepEnabled;
         UpdateSpeechRateLabel();
         UpdateOverlayLabel();
+        LoadTtsVoices();
         _speechRateReady = true;
         RefreshMemoryStatus();
         RefreshDevices();
@@ -149,6 +158,44 @@ public partial class MainViewModel : ObservableObject
         _tts.SetRate(value);
         _prefs.SaveTtsRate(value);
         UpdateSpeechRateLabel();
+    }
+
+    partial void OnPttBeepEnabledChanged(bool value)
+    {
+        if (!_speechRateReady)
+            return;
+
+        _beeps.Enabled = value;
+        _prefs.SavePttBeepEnabled(value);
+    }
+
+    partial void OnSelectedTtsVoiceChanged(TtsVoiceOption? value)
+    {
+        if (!_speechRateReady || value is null)
+            return;
+
+        _tts.SetVoice(string.IsNullOrEmpty(value.Id) ? null : value.Id);
+        _prefs.SaveTtsVoiceId(string.IsNullOrEmpty(value.Id) ? null : value.Id);
+    }
+
+    private void LoadTtsVoices()
+    {
+        TtsVoices.Clear();
+        foreach (var voice in _tts.AvailableVoices)
+            TtsVoices.Add(voice);
+
+        var savedId = _prefs.Current.TtsVoiceId ?? "";
+        SelectedTtsVoice = TtsVoices.FirstOrDefault(v => v.Id == savedId)
+                           ?? TtsVoices.FirstOrDefault();
+    }
+
+    private void ReloadTtsVoices()
+    {
+        var keepReady = _speechRateReady;
+        _speechRateReady = false;
+        _tts.RefreshAvailableVoices();
+        LoadTtsVoices();
+        _speechRateReady = keepReady;
     }
 
     private void UpdateSpeechRateLabel()
@@ -329,7 +376,8 @@ public partial class MainViewModel : ObservableObject
         _prefs.SaveGeminiApiKey(key);
         GeminiApiKeyInput = "";
         RefreshGeminiStatus();
-        LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Gemini API key saved");
+        ReloadTtsVoices();
+        LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Gemini API key saved — neural TTS enabled");
     }
 
     [RelayCommand]
@@ -339,6 +387,7 @@ public partial class MainViewModel : ObservableObject
         _prefs.SaveGeminiApiKey(null);
         GeminiApiKeyInput = "";
         RefreshGeminiStatus();
+        ReloadTtsVoices();
         LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Gemini API key cleared");
     }
 

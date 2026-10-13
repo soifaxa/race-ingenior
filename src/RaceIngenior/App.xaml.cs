@@ -49,7 +49,16 @@ public partial class App : System.Windows.Application
                 services.AddHttpClient<LmuRestClient>();
                 services.AddHttpClient("gemini");
 
-                services.AddSingleton<ITtsService, WindowsTtsService>();
+                services.AddSingleton<WindowsTtsService>();
+                services.AddSingleton<GeminiTtsClient>(sp =>
+                {
+                    var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient("gemini");
+                    return new GeminiTtsClient(
+                        http,
+                        sp.GetRequiredService<IOptions<AppSettings>>(),
+                        sp.GetRequiredService<ILogger<GeminiTtsClient>>());
+                });
+                services.AddSingleton<ITtsService, HybridTtsService>();
                 services.AddSingleton<ISttService, WhisperSttService>();
                 services.AddSingleton<RuleEngineService>();
                 services.AddSingleton<EngineerMemory>();
@@ -69,6 +78,7 @@ public partial class App : System.Windows.Application
 
                 services.AddSingleton<WheelPttService>();
                 services.AddHostedService(sp => sp.GetRequiredService<WheelPttService>());
+                services.AddSingleton<RadioBeepService>();
 
                 services.AddSingleton<RadioPipelineService>();
                 services.AddHostedService(sp => sp.GetRequiredService<RadioPipelineService>());

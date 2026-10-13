@@ -18,8 +18,8 @@ dotnet build src/RaceIngenior/RaceIngenior.csproj -c Debug
 
 Exe paths:
 
-- Debug: `src/RaceIngenior/bin/Debug/net8.0-windows/RaceIngenior.exe`
-- Release: `src/RaceIngenior/bin/Release/net8.0-windows/RaceIngenior.exe`
+- Debug: `src/RaceIngenior/bin/Debug/net8.0-windows10.0.19041.0/RaceIngenior.exe`
+- Release: `src/RaceIngenior/bin/Release/net8.0-windows10.0.19041.0/RaceIngenior.exe`
 
 Keep the exe next to its output folder (deps, `appsettings.json`). Gemini key is set in-app, not via shipped secrets files.
 

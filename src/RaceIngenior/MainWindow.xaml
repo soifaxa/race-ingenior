@@ -212,11 +212,11 @@
     <!-- Main boards -->
     <Grid Grid.Row="2" Margin="12">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="1.05*"/>
+        <ColumnDefinition Width="1.0*"/>
         <ColumnDefinition Width="12"/>
-        <ColumnDefinition Width="0.95*"/>
+        <ColumnDefinition Width="1.2*"/>
         <ColumnDefinition Width="12"/>
-        <ColumnDefinition Width="0.9*"/>
+        <ColumnDefinition Width="0.85*"/>
       </Grid.ColumnDefinitions>
 
       <!-- TELEMETRY + TRACK MAP -->
