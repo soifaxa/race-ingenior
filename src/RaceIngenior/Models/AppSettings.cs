@@ -23,6 +23,8 @@ public sealed class AppSettings
     public double TireColdBelowC { get; set; } = 60;
     /// <summary>At/above this (°C) on all tires → push OK call.</summary>
     public double TireWarmReadyC { get; set; } = 75;
+    /// <summary>Public GitHub repo URL used by Velopack for Releases updates.</summary>
+    public string UpdateGithubRepoUrl { get; set; } = "https://github.com/soifaxa/race-ingenior";
     public MemorySettings Memory { get; set; } = new();
 }
 

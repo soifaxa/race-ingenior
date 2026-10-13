@@ -87,6 +87,7 @@ public partial class App : System.Windows.Application
 
                 services.AddSingleton<OverlayViewModel>();
                 services.AddSingleton<OverlayService>();
+                services.AddSingleton<AppUpdateService>();
                 services.AddSingleton<MainViewModel>();
                 services.AddSingleton<MainWindow>();
             })
@@ -104,6 +105,10 @@ public partial class App : System.Windows.Application
         window.Show();
 
         _host.Services.GetRequiredService<OverlayService>().RestoreFromPreferences();
+
+        // Non-blocking: GitHub Releases check (installed builds only).
+        var vm = _host.Services.GetRequiredService<MainViewModel>();
+        _ = vm.CheckForUpdatesOnStartupAsync();
     }
 
     protected override async void OnExit(ExitEventArgs e)

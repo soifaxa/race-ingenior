@@ -5,13 +5,17 @@ All notable changes to Race Ingenior are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease label on the informational version.
 
-## [0.0.1.6-dev] — 2026-10-13
+## [0.1.0] — 2026-10-13
+
+First public minor release of Race Ingenior (Le Mans Ultimate race engineer: radio + telemetry + overlay).
 
 ### Added
 
+- **Installer + auto-update** via [Velopack](https://docs.velopack.io): pack with `.\scripts\pack-release.ps1`, publish to GitHub Releases; check on startup and **CHECK FOR UPDATES** in Settings
 - Gemini **neural TTS** (same API key; default Charon) with Windows OneCore fallback; **RADIO VOICE** picker in Settings
 - PTT radio beeps (open before mic / close after stop); toggle in Settings
 - PTT STT: Whisper **base** (was tiny), French race-radio prompt, silence trim + mic AGC
+- Settings window, track map + learning, tyre call, flag warnings, session reports, standings, records, manufacturer logos (see prior `0.0.1.x` entries)
 
 ### Changed
 
@@ -20,8 +24,12 @@ Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease lab
 
 ### Notes
 
-- Assembly / file version: `0.0.1.6`. Informational version: `0.0.1.6-dev`.
-- Whisper install: `.\scripts\install-whisper-model.ps1` (default base; `-Size small` optional)
+- Assembly / file version: `0.1.0.0`. Informational version: `0.1.0`.
+- Release exe (dev): `src/RaceIngenior/bin/Release/net8.0-windows10.0.19041.0/RaceIngenior.exe`
+- End-user installer: `artifacts/releases/RaceIngenior-win-Setup.exe` after `.\scripts\pack-release.ps1` (optional `-Upload`)
+- Update feed: public GitHub Releases on `soifaxa/race-ingenior`
+- Whisper install: `.\scripts\install-whisper-model.ps1` (default base; `-Size small` optional) — also auto-downloads on first PTT if missing
+- Gemini API key is set in Settings (not shipped with the build)
 
 ## [0.0.1.5-dev] — 2026-10-13
 

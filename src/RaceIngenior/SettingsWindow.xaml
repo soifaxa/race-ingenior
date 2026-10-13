@@ -269,6 +269,22 @@
                   Command="{Binding ClearMemoryCommand}"
                   HorizontalAlignment="Left" Margin="0,0,0,16"/>
 
+          <Border BorderBrush="#333333" BorderThickness="0,1,0,0" Padding="0,14,0,0" Margin="0,0,0,16">
+            <StackPanel>
+              <TextBlock Text="UPDATES" Foreground="#E10600" FontSize="11" FontWeight="Bold" Margin="0,0,0,8"/>
+              <TextBlock Text="{Binding AppVersion, StringFormat=App version {0}}"
+                         Foreground="#AAAAAA" FontSize="11" Margin="0,0,0,4"/>
+              <TextBlock Text="{Binding UpdateStatus}" Foreground="#AAAAAA" FontSize="11"
+                         TextWrapping="Wrap" Margin="0,0,0,8"/>
+              <Button Style="{StaticResource WecButton}" Content="CHECK FOR UPDATES"
+                      Command="{Binding CheckForUpdatesCommand}"
+                      IsEnabled="{Binding CanCheckForUpdates}"
+                      HorizontalAlignment="Left"/>
+              <TextBlock Text="Checks GitHub Releases. Install from Setup.exe to enable auto-updates."
+                         Foreground="#777777" FontSize="10" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            </StackPanel>
+          </Border>
+
           <TextBlock Style="{StaticResource Meta}" Text="GEMINI API KEY"/>
           <TextBlock Text="{Binding GeminiStatus}" Foreground="#AAAAAA" FontSize="11"
                      TextWrapping="Wrap" Margin="0,0,0,6"/>

@@ -27,9 +27,11 @@ public partial class MainViewModel : ObservableObject
     private readonly TrackLayoutLearner _trackLearner;
     private readonly SessionReportService _sessionReports;
     private readonly BrandLogoStore _brandLogos;
+    private readonly AppUpdateService _updates;
     private readonly AppSettings _settings;
     private bool _speechRateReady;
     private long _lastStandingsRefreshTicks;
+    private bool _updateCheckBusy;
 
     [ObservableProperty] private string _connectionStatus = "Waiting for LMU…";
     [ObservableProperty] private string _pttStatus = "";
@@ -81,6 +83,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _flagDetail = "No flags";
     [ObservableProperty] private bool _autoOpenSessionReport = true;
     [ObservableProperty] private bool _pttBeepEnabled = true;
+    [ObservableProperty] private string _updateStatus = "";
+    [ObservableProperty] private bool _isCheckingUpdates;
+    [ObservableProperty] private bool _canCheckForUpdates = true;
 
     public ObservableCollection<string> LogLines { get; } = [];
     public event Action<string, SessionReport>? OpenSessionReportRequested;
@@ -103,6 +108,7 @@ public partial class MainViewModel : ObservableObject
         TrackLayoutLearner trackLearner,
         SessionReportService sessionReports,
         BrandLogoStore brandLogos,
+        AppUpdateService updates,
         IOptions<AppSettings> settings)
     {
         _hub = hub;
@@ -118,9 +124,13 @@ public partial class MainViewModel : ObservableObject
         _trackLearner = trackLearner;
         _sessionReports = sessionReports;
         _brandLogos = brandLogos;
+        _updates = updates;
         _settings = settings.Value;
 
         AppVersion = ResolveAppVersion();
+        UpdateStatus = _updates.IsInstalled
+            ? $"Installed · {_updates.CurrentVersionDisplay}"
+            : "Dev build — install via Setup.exe for auto-updates";
         RefreshGeminiStatus();
         SelectedButtonIndex = _ptt.ButtonOffset;
         SpeechRate = _tts.Rate;
@@ -506,6 +516,75 @@ public partial class MainViewModel : ObservableObject
         }
 
         System.Windows.Application.Current.Shutdown();
+    }
+
+    /// <summary>Silent check at startup; prompts only when an update is available.</summary>
+    public Task CheckForUpdatesOnStartupAsync() =>
+        RunUpdateCheckAsync(promptIfAvailable: true, userInitiated: false);
+
+    [RelayCommand]
+    private Task CheckForUpdatesAsync() =>
+        RunUpdateCheckAsync(promptIfAvailable: true, userInitiated: true);
+
+    private async Task RunUpdateCheckAsync(bool promptIfAvailable, bool userInitiated)
+    {
+        if (_updateCheckBusy)
+            return;
+
+        _updateCheckBusy = true;
+        IsCheckingUpdates = true;
+        CanCheckForUpdates = false;
+        try
+        {
+            if (userInitiated)
+            {
+                UpdateStatus = "Checking for updates…";
+                LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Checking for updates…");
+            }
+
+            var result = await _updates.CheckForUpdatesAsync().ConfigureAwait(true);
+            UpdateStatus = result.Message;
+
+            if (userInitiated || result.UpdateAvailable)
+                LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] {result.Message}");
+
+            if (!result.UpdateAvailable || !promptIfAvailable)
+                return;
+
+            var answer = System.Windows.MessageBox.Show(
+                $"A new version is available.\n\nCurrent: {result.CurrentVersion}\nNew: {result.AvailableVersion}\n\nDownload and install now? The app will restart.",
+                "Race Ingenior — Update",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Information);
+
+            if (answer != System.Windows.MessageBoxResult.Yes)
+            {
+                UpdateStatus = $"Update {result.AvailableVersion} available — use CHECK FOR UPDATES in Settings when ready.";
+                return;
+            }
+
+            UpdateStatus = "Downloading update…";
+            LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Downloading update {result.AvailableVersion}…");
+
+            var progress = new Progress<int>(p =>
+            {
+                UpdateStatus = $"Downloading update… {p}%";
+            });
+
+            await _updates.ApplyPendingUpdateAsync(progress).ConfigureAwait(true);
+            // Process exits via ApplyUpdatesAndRestart.
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus = $"Update failed: {ex.Message}";
+            LogLines.Insert(0, $"[{DateTime.Now:HH:mm:ss}] Update failed: {ex.Message}");
+        }
+        finally
+        {
+            IsCheckingUpdates = false;
+            CanCheckForUpdates = true;
+            _updateCheckBusy = false;
+        }
     }
 
     private void SyncTrackCars(TelemetrySnapshot snap)
