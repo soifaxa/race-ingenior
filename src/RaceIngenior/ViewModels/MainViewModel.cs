@@ -25,8 +25,10 @@ public partial class MainViewModel : ObservableObject
     private readonly TrackLayoutStore _trackLayouts;
     private readonly TrackLayoutLearner _trackLearner;
     private readonly SessionReportService _sessionReports;
+    private readonly BrandLogoStore _brandLogos;
     private readonly AppSettings _settings;
     private bool _speechRateReady;
+    private long _lastStandingsRefreshTicks;
 
     [ObservableProperty] private string _connectionStatus = "Waiting for LMU…";
     [ObservableProperty] private string _pttStatus = "";
@@ -59,6 +61,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private int _conversationOverlaySeconds = 8;
     [ObservableProperty] private string _appVersion = "";
     [ObservableProperty] private IReadOnlyList<TrackCar> _trackCars = Array.Empty<TrackCar>();
+    [ObservableProperty] private IReadOnlyList<StandingEntry> _standings = Array.Empty<StandingEntry>();
+    [ObservableProperty] private string _standingsCountLabel = "0";
     [ObservableProperty] private TrackLayout? _currentTrackLayout;
     [ObservableProperty] private string _trackMapStatus = "";
     [ObservableProperty] private string _trackMapModeLabel = "OVAL";
@@ -93,6 +97,7 @@ public partial class MainViewModel : ObservableObject
         TrackLayoutStore trackLayouts,
         TrackLayoutLearner trackLearner,
         SessionReportService sessionReports,
+        BrandLogoStore brandLogos,
         IOptions<AppSettings> settings)
     {
         _hub = hub;
@@ -106,6 +111,7 @@ public partial class MainViewModel : ObservableObject
         _trackLayouts = trackLayouts;
         _trackLearner = trackLearner;
         _sessionReports = sessionReports;
+        _brandLogos = brandLogos;
         _settings = settings.Value;
 
         AppVersion = ResolveAppVersion();
@@ -193,7 +199,8 @@ public partial class MainViewModel : ObservableObject
             PttStatus = _ptt.Status;
             RadioMode = _radio.Mode;
             Track = string.IsNullOrWhiteSpace(snap.Track) ? "—" : snap.Track;
-            Vehicle = string.IsNullOrWhiteSpace(snap.Vehicle) ? "—" : snap.Vehicle;
+            Vehicle = BrandResolver.FormatClassAndBrand(
+                snap.VehFilename, vehicleName: snap.Vehicle, vehicleClass: snap.VehicleClass);
             Place = snap.Connected ? $"P{snap.Place}  Lap {snap.Lap}" : "—";
             Fuel = snap.Connected ? $"{snap.FuelL:0.0} / {snap.FuelCapacityL:0.0} L" : "—";
             Speed = snap.Connected ? $"{snap.SpeedKmh:0} km/h  {snap.Rpm:0} rpm" : "—";
@@ -452,10 +459,99 @@ public partial class MainViewModel : ObservableObject
         System.Windows.Application.Current.Shutdown();
     }
 
-    private void SyncTrackCars(TelemetrySnapshot snap) =>
-        TrackCars = snap.Connected && snap.Field.Count > 0
-            ? snap.Field
-            : Array.Empty<TrackCar>();
+    private void SyncTrackCars(TelemetrySnapshot snap)
+    {
+        if (!snap.Connected || snap.Field.Count == 0)
+        {
+            TrackCars = Array.Empty<TrackCar>();
+            if (Standings.Count > 0)
+            {
+                Standings = Array.Empty<StandingEntry>();
+                StandingsCountLabel = "0";
+            }
+            _lastStandingsRefreshTicks = 0;
+            return;
+        }
+
+        TrackCars = snap.Field;
+
+        // Standings panel: refresh at most once every 5 s (map still uses TrackCars at poll rate).
+        var now = Stopwatch.GetTimestamp();
+        var elapsedMs = _lastStandingsRefreshTicks == 0
+            ? 5000.0
+            : (now - _lastStandingsRefreshTicks) * 1000.0 / Stopwatch.Frequency;
+        if (elapsedMs < 5000.0)
+            return;
+
+        _lastStandingsRefreshTicks = now;
+        Standings = snap.Field.Select(ToStandingEntry).ToList();
+        StandingsCountLabel = Standings.Count.ToString();
+    }
+
+    private StandingEntry ToStandingEntry(TrackCar car)
+    {
+        var (classKey, classLabel) = BrandResolver.Classify(car.VehicleClass);
+        var brand = BrandResolver.ResolveDisplay(
+            car.VehFilename, vehicleName: car.VehicleName, vehicleClass: car.VehicleClass);
+        var vehFile = FormatVehIdentity(car.VehFilename);
+        return new StandingEntry
+        {
+            Place = car.Place,
+            PlaceText = car.Place > 0 ? car.Place.ToString() : "—",
+            Name = string.IsNullOrWhiteSpace(car.Name) ? "Driver" : car.Name,
+            Brand = string.IsNullOrEmpty(brand) ? "—" : brand,
+            VehFilename = vehFile,
+            BrandHint = $"{(string.IsNullOrEmpty(brand) ? "—" : brand)}\n{vehFile}\n{car.VehicleName}",
+            BrandLogo = _brandLogos.GetLogoForIdentity(
+                car.VehFilename, vehicleName: car.VehicleName, vehicleClass: car.VehicleClass),
+            ClassKey = classKey,
+            ClassLabel = classLabel,
+            LastLap = LapTimeFormat.Format(car.LastLapTime),
+            BestLap = LapTimeFormat.Format(car.BestLapTime),
+            Gap = FormatStandingGap(car),
+            Pit = FormatStandingPit(car),
+            InPits = car.InPits,
+            IsPlayer = car.IsPlayer
+        };
+    }
+
+    private static string FormatStandingPit(TrackCar car)
+    {
+        if (car.InPits)
+            return "IN";
+        return car.PitStops > 0 ? car.PitStops.ToString() : "—";
+    }
+
+    private static string FormatVehIdentity(string? vehFilename)
+    {
+        if (string.IsNullOrWhiteSpace(vehFilename))
+            return "—";
+        if (BrandResolver.IsOpaqueId(vehFilename))
+            return $"id:{vehFilename.Trim()[..8]}…";
+        return vehFilename.Trim();
+    }
+
+    private static string FormatStandingGap(TrackCar car)
+    {
+        if (car.Place <= 1)
+            return "LEADER";
+
+        if (car.LapsBehindLeader > 0)
+            return $"+{car.LapsBehindLeader}L";
+
+        if (car.TimeBehindLeader > 0.0005)
+            return "+" + FormatGapSeconds(car.TimeBehindLeader);
+
+        return "—";
+    }
+
+    private static string FormatGapSeconds(double seconds)
+    {
+        if (seconds < 60.0)
+            return seconds.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture);
+
+        return LapTimeFormat.Format(seconds);
+    }
 
     private void SyncTireAdvice(TelemetrySnapshot snap)
     {

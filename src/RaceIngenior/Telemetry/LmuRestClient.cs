@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -18,12 +19,23 @@ public sealed class LmuRestClient
         _logger = logger;
         _settings = settings.Value;
         _http.BaseAddress = new Uri(_settings.LmuRestBaseUrl.TrimEnd('/') + "/");
-        _http.Timeout = TimeSpan.FromMilliseconds(800);
+        _http.Timeout = TimeSpan.FromMilliseconds(1200);
     }
 
     public async Task EnrichAsync(TelemetrySnapshot snapshot, CancellationToken ct)
     {
         _ = snapshot;
+
+        // Standings identity (carId / vehicleFilename) must not depend on VE endpoints.
+        try
+        {
+            await TryReadStandingsVehicleFilenamesAsync(ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            _logger.LogDebug(ex, "LMU REST standings enrichment failed");
+        }
+
         try
         {
             // Hypercar Virtual Energy is not in rF2 shared memory.
@@ -37,16 +49,71 @@ public sealed class LmuRestClient
                 RestCache.LastNotes = "REST OK";
                 RestCache.LastOk = DateTimeOffset.UtcNow;
             }
-            else
+            else if (RestCache.LastNotes is null or "REST unavailable")
             {
                 RestCache.LastNotes = "REST VE missing";
             }
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
         {
-            RestCache.LastNotes = "REST unavailable";
-            _logger.LogDebug(ex, "LMU REST enrichment failed");
+            if (RestCache.LastNotes is null)
+                RestCache.LastNotes = "REST unavailable";
+            _logger.LogDebug(ex, "LMU REST VE enrichment failed");
         }
+    }
+
+    private async Task TryReadStandingsVehicleFilenamesAsync(CancellationToken ct)
+    {
+        using var response = await _http.GetAsync("rest/watch/standings", ct);
+        if (!response.IsSuccessStatusCode)
+            return;
+
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+        if (doc.RootElement.ValueKind != JsonValueKind.Array)
+            return;
+
+        var bySlot = new ConcurrentDictionary<int, string>();
+        var byVehicleName = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var byDriver = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var row in doc.RootElement.EnumerateArray())
+        {
+            // Online sessions often send carId as a 40-char content hash — useless for logos.
+            // Prefer vehicleFilename when readable; BrandResolver also maps team liveries.
+            var identity = RaceIngenior.Services.BrandResolver.PreferIdentity(
+                FirstNonEmpty(ReadString(row, "vehicleFilename"), ReadString(row, "VehicleFilename")),
+                FirstNonEmpty(ReadString(row, "carId"), ReadString(row, "CarId")));
+            if (string.IsNullOrWhiteSpace(identity))
+                continue;
+
+            identity = identity.Trim();
+
+            if (TryGetDouble(row, "slotID", out var slot) || TryGetDouble(row, "slotId", out slot))
+                bySlot[(int)slot] = identity;
+
+            var vehName = FirstNonEmpty(
+                ReadString(row, "vehicleName"),
+                ReadString(row, "VehicleName"),
+                ReadString(row, "fullTeamName"),
+                ReadString(row, "FullTeamName"));
+            if (!string.IsNullOrWhiteSpace(vehName))
+                byVehicleName[vehName.Trim()] = identity;
+
+            var driver = FirstNonEmpty(ReadString(row, "driverName"), ReadString(row, "DriverName"));
+            if (!string.IsNullOrWhiteSpace(driver))
+                byDriver[driver.Trim()] = identity;
+        }
+
+        if (bySlot.IsEmpty && byVehicleName.IsEmpty && byDriver.IsEmpty)
+            return;
+
+        RestCache.VehFilenameBySlot = bySlot;
+        RestCache.VehFilenameByVehicleName = byVehicleName;
+        RestCache.VehFilenameByDriverName = byDriver;
+        RestCache.LastOk = DateTimeOffset.UtcNow;
+        if (RestCache.LastNotes is null or "REST VE missing" or "REST unavailable")
+            RestCache.LastNotes = "REST OK";
     }
 
     private async Task<double?> TryReadVirtualEnergyFromRepairAndRefuelAsync(CancellationToken ct)
@@ -133,6 +200,24 @@ public sealed class LmuRestClient
 
     private static double ClampPercent(double pct) => Math.Clamp(pct, 0, 100);
 
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        foreach (var v in values)
+        {
+            if (!string.IsNullOrWhiteSpace(v))
+                return v;
+        }
+
+        return null;
+    }
+
+    private static string? ReadString(JsonElement el, string name)
+    {
+        if (!el.TryGetProperty(name, out var p))
+            return null;
+        return p.ValueKind == JsonValueKind.String ? p.GetString() : p.ToString();
+    }
+
     private static bool TryGetDouble(JsonElement el, string name, out double value)
     {
         value = 0;
@@ -154,4 +239,25 @@ internal static class RestCache
     public static double? VirtualEnergy { get; set; }
     public static string? LastNotes { get; set; }
     public static DateTimeOffset LastOk { get; set; }
+
+    public static ConcurrentDictionary<int, string> VehFilenameBySlot { get; set; } = new();
+    public static ConcurrentDictionary<string, string> VehFilenameByVehicleName { get; set; } =
+        new(StringComparer.OrdinalIgnoreCase);
+    public static ConcurrentDictionary<string, string> VehFilenameByDriverName { get; set; } =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    public static string? TryResolveVehFilename(int slotId, string? vehicleName, string? driverName = null)
+    {
+        if (VehFilenameBySlot.TryGetValue(slotId, out var bySlot) && !string.IsNullOrWhiteSpace(bySlot))
+            return bySlot;
+        if (!string.IsNullOrWhiteSpace(vehicleName)
+            && VehFilenameByVehicleName.TryGetValue(vehicleName.Trim(), out var byName)
+            && !string.IsNullOrWhiteSpace(byName))
+            return byName;
+        if (!string.IsNullOrWhiteSpace(driverName)
+            && VehFilenameByDriverName.TryGetValue(driverName.Trim(), out var byDriver)
+            && !string.IsNullOrWhiteSpace(byDriver))
+            return byDriver;
+        return null;
+    }
 }

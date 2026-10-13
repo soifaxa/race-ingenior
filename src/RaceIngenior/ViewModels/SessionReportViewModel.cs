@@ -1,4 +1,5 @@
 using RaceIngenior.Models;
+using RaceIngenior.Services;
 
 namespace RaceIngenior.ViewModels;
 
@@ -46,12 +47,13 @@ public sealed class SessionReportViewModel
     public SessionReportViewModel(SessionReport r)
     {
         HeaderTrack = string.IsNullOrWhiteSpace(r.Track) ? "—" : r.Track.ToUpperInvariant();
-        HeaderCar = string.IsNullOrWhiteSpace(r.Vehicle) ? "—" : r.Vehicle;
+        HeaderCar = BrandResolver.FormatClassAndBrand(
+            r.VehFilename, vehicleName: r.Vehicle, vehicleClass: r.VehicleClass);
         HeaderMeta = $"{r.SessionType.ToUpperInvariant()}  ·  {r.LapsCompleted} LAPS  ·  {FormatDuration(r.DurationSec)}";
         ReportId = r.ReportId;
 
         Track = Dash(r.Track);
-        Vehicle = $"{Dash(r.Vehicle)}  ({Dash(r.VehicleClass)})";
+        Vehicle = HeaderCar;
         VehicleClass = Dash(r.VehicleClass);
         Driver = Dash(r.Driver);
         SessionType = $"{r.SessionType}  ({r.SessionCode})";

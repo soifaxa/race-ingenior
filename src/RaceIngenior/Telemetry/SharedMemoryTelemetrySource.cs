@@ -78,6 +78,7 @@ public sealed class SharedMemoryTelemetrySource : IDisposable
             Connected = true,
             Track = Decode(_scoringData.mScoringInfo.mTrackName),
             Vehicle = Decode(playerTelem.mVehicleName),
+            VehFilename = Decode(playerScoring.Value.mVehFilename),
             Driver = Decode(playerScoring.Value.mDriverName),
             VehicleClass = Decode(playerScoring.Value.mVehicleClass),
             Session = _scoringData.mScoringInfo.mSession,
@@ -172,12 +173,23 @@ public sealed class SharedMemoryTelemetrySource : IDisposable
 
             result.Add(new TrackCar
             {
+                SlotId = v.mID,
                 Name = Decode(v.mDriverName),
+                VehicleName = Decode(v.mVehicleName),
+                VehFilename = Decode(v.mVehFilename),
                 VehicleClass = Decode(v.mVehicleClass),
                 Place = v.mPlace,
                 LapDistFraction = frac,
                 IsPlayer = v.mIsPlayer != 0,
-                InPits = v.mInPits != 0 || v.mInGarageStall != 0
+                InPits = v.mInPits != 0 || v.mInGarageStall != 0,
+                PitStops = v.mNumPitstops,
+                LastLapTime = v.mLastLapTime,
+                BestLapTime = v.mBestLapTime,
+                LapsCompleted = v.mTotalLaps,
+                TimeBehindLeader = v.mTimeBehindLeader,
+                LapsBehindLeader = v.mLapsBehindLeader,
+                TimeBehindNext = v.mTimeBehindNext,
+                LapsBehindNext = v.mLapsBehindNext
             });
         }
 

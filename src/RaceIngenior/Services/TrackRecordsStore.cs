@@ -64,7 +64,8 @@ public sealed class TrackRecordsStore
         string? vehicleClass,
         double bestLapSec,
         DateTimeOffset setAtUtc,
-        string? sourceReportId = null)
+        string? sourceReportId = null,
+        string? vehFilename = null)
     {
         if (bestLapSec <= 0 || double.IsNaN(bestLapSec) || double.IsInfinity(bestLapSec))
             return false;
@@ -76,6 +77,8 @@ public sealed class TrackRecordsStore
 
         var pair = PairKey(trackKey, vehicleKey);
         var changed = false;
+        var brand = BrandResolver.ResolveDisplay(
+            vehFilename, vehicleName: vehicleName, vehicleClass: vehicleClass);
 
         lock (_sync)
         {
@@ -92,18 +95,29 @@ public sealed class TrackRecordsStore
                         existing.VehicleName = vehicleName.Trim();
                     if (!string.IsNullOrWhiteSpace(vehicleClass))
                         existing.VehicleClass = vehicleClass.Trim();
+                    if (!string.IsNullOrWhiteSpace(brand))
+                        existing.Brand = brand;
+                    else if (string.IsNullOrWhiteSpace(existing.Brand))
+                        existing.Brand = BrandResolver.ResolveDisplay(existing.VehicleName);
+                    changed = true;
+                }
+                else if (string.IsNullOrWhiteSpace(existing.Brand) && !string.IsNullOrWhiteSpace(brand))
+                {
+                    existing.Brand = brand;
                     changed = true;
                 }
             }
             else
             {
+                var name = string.IsNullOrWhiteSpace(vehicleName) ? vehicleKey : vehicleName.Trim();
                 _byPair[pair] = new TrackRecord
                 {
                     TrackKey = trackKey,
                     TrackName = string.IsNullOrWhiteSpace(trackName) ? trackKey : trackName.Trim(),
                     VehicleKey = vehicleKey,
-                    VehicleName = string.IsNullOrWhiteSpace(vehicleName) ? vehicleKey : vehicleName.Trim(),
+                    VehicleName = name,
                     VehicleClass = vehicleClass?.Trim() ?? "",
+                    Brand = brand,
                     BestLapSec = bestLapSec,
                     SetAtUtc = setAtUtc,
                     SourceReportId = sourceReportId
@@ -128,7 +142,8 @@ public sealed class TrackRecordsStore
             report.VehicleClass,
             report.BestLapSec,
             report.EndedUtc == default ? report.StartedUtc : report.EndedUtc,
-            report.ReportId);
+            report.ReportId,
+            report.VehFilename);
 
     public void MergeFromReports(IEnumerable<SessionReportSummary> summaries, Func<string, SessionReport?> load)
     {
@@ -174,6 +189,7 @@ public sealed class TrackRecordsStore
                 if (file?.Records is null)
                     return;
 
+                var brandBackfill = false;
                 foreach (var r in file.Records)
                 {
                     if (r.BestLapSec <= 0)
@@ -186,9 +202,19 @@ public sealed class TrackRecordsStore
                     if (pair.Length == 0)
                         continue;
 
+                    if (string.IsNullOrWhiteSpace(r.Brand))
+                    {
+                        r.Brand = BrandResolver.ResolveDisplay(r.VehicleName);
+                        if (!string.IsNullOrWhiteSpace(r.Brand))
+                            brandBackfill = true;
+                    }
+
                     if (!_byPair.TryGetValue(pair, out var existing) || r.BestLapSec < existing.BestLapSec)
                         _byPair[pair] = r;
                 }
+
+                if (brandBackfill)
+                    SaveUnlocked();
 
                 _logger.LogInformation("Loaded {Count} track record(s)", _byPair.Count);
             }
@@ -243,6 +269,7 @@ public sealed class TrackRecordsStore
         VehicleKey = r.VehicleKey,
         VehicleName = r.VehicleName,
         VehicleClass = r.VehicleClass,
+        Brand = r.Brand,
         BestLapSec = r.BestLapSec,
         SetAtUtc = r.SetAtUtc,
         SourceReportId = r.SourceReportId

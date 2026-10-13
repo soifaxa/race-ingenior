@@ -535,10 +535,15 @@ namespace RaceIngenior.Telemetry
  public float mBestLapSector1; // sector 1 time from best lap (not necessarily the best sector 1 time) 
  public float mBestLapSector2; // sector 2 time from best lap (not necessarily the best sector 2 time) 
  
- // Future use 
- // tag.2012.04.06 - SEE ABOVE! 
- [MarshalAsAttribute(UnmanagedType.ByValArray, SizeConst = 48)] 
- public byte[] mExpansion; // for future use 
+ // LMU InternalsPlugin VehicleScoringInfoV01 extensions (occupy former mExpansion[48]).
+ public ulong mSteamID;
+ [MarshalAsAttribute(UnmanagedType.ByValArray, SizeConst = 32)]
+ public byte[] mVehFilename; // .veh file used to identify this vehicle / model
+ public short mAttackMode;
+ public byte mFuelFraction; // 0x00=0% … 0xFF=100%
+ public byte mDRSState;
+ [MarshalAsAttribute(UnmanagedType.ByValArray, SizeConst = 4)]
+ public byte[] mExpansion;
  } 
  
  

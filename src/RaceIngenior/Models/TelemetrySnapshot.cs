@@ -8,7 +8,10 @@ public sealed class TelemetrySnapshot
     public bool Connected { get; init; }
 
     public string Track { get; init; } = "";
+    /// <summary>Team / livery label (scoring/telem <c>mVehicleName</c>).</summary>
     public string Vehicle { get; init; } = "";
+    /// <summary>LMU <c>mVehFilename</c> — identifies the car model for manufacturer logos.</summary>
+    public string VehFilename { get; init; } = "";
     public string Driver { get; init; } = "";
     public string VehicleClass { get; init; } = "";
 
@@ -154,13 +157,48 @@ public sealed class NearbyCar
     public string Side { get; init; } = "";
 }
 
-/// <summary>Car on the relative track map (0–1 lap distance).</summary>
+/// <summary>Car on the relative track map / standings (0–1 lap distance).</summary>
 public sealed class TrackCar
 {
+    public int SlotId { get; init; }
     public string Name { get; init; } = "";
+    /// <summary>Team / livery label from scoring <c>mVehicleName</c> (often not the manufacturer).</summary>
+    public string VehicleName { get; init; } = "";
+    /// <summary>.veh filename — from LMU REST <c>vehicleFilename</c> (preferred) or scoring.</summary>
+    public string VehFilename { get; init; } = "";
     public string VehicleClass { get; init; } = "";
     public int Place { get; init; }
     public double LapDistFraction { get; init; }
     public bool IsPlayer { get; init; }
     public bool InPits { get; init; }
+    public int PitStops { get; init; }
+    public double LastLapTime { get; init; }
+    public double BestLapTime { get; init; }
+    public int LapsCompleted { get; init; }
+    public double TimeBehindLeader { get; init; }
+    public int LapsBehindLeader { get; init; }
+    public double TimeBehindNext { get; init; }
+    public int LapsBehindNext { get; init; }
+}
+
+/// <summary>Formatted row for the live standings panel.</summary>
+public sealed class StandingEntry
+{
+    public int Place { get; init; }
+    public string PlaceText { get; init; } = "—";
+    public string Name { get; init; } = "";
+    public string Brand { get; init; } = "";
+    public string VehFilename { get; init; } = "";
+    public string BrandHint { get; init; } = "";
+    public System.Windows.Media.ImageSource? BrandLogo { get; init; }
+    /// <summary>HYPERCAR / LMP2 / LMP3 / LMGT3 / OTHER — drives class colour in UI.</summary>
+    public string ClassKey { get; init; } = "OTHER";
+    public string ClassLabel { get; init; } = "";
+    public string LastLap { get; init; } = "—";
+    public string BestLap { get; init; } = "—";
+    public string Gap { get; init; } = "—";
+    /// <summary>Pit-stop count, or IN when currently in pits.</summary>
+    public string Pit { get; init; } = "—";
+    public bool InPits { get; init; }
+    public bool IsPlayer { get; init; }
 }

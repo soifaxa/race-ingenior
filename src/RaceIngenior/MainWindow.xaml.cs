@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
 using RaceIngenior.Models;
 using RaceIngenior.Services;
 using RaceIngenior.ViewModels;
@@ -12,9 +13,11 @@ public partial class MainWindow : Window
     private readonly UserPreferencesStore _prefs;
     private readonly SessionReportService _sessionReports;
     private readonly TrackRecordsStore _trackRecords;
+    private readonly BrandLogoStore _brandLogos;
     private SettingsWindow? _settingsWindow;
     private ReportsWindow? _reportsWindow;
     private RecordsWindow? _recordsWindow;
+    private TrackMapWindow? _trackMapWindow;
     private SessionReportWindow? _reportWindow;
     private bool _restoringPlacement;
     private bool _forceClose;
@@ -23,12 +26,14 @@ public partial class MainWindow : Window
         MainViewModel viewModel,
         UserPreferencesStore prefs,
         SessionReportService sessionReports,
-        TrackRecordsStore trackRecords)
+        TrackRecordsStore trackRecords,
+        BrandLogoStore brandLogos)
     {
         _viewModel = viewModel;
         _prefs = prefs;
         _sessionReports = sessionReports;
         _trackRecords = trackRecords;
+        _brandLogos = brandLogos;
         InitializeComponent();
         DataContext = viewModel;
         TrayIcon.Icon = System.Drawing.SystemIcons.Information;
@@ -69,6 +74,14 @@ public partial class MainWindow : Window
 
     private void Records_Click(object sender, RoutedEventArgs e) => OpenRecords();
 
+    private void TrackMap_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left)
+            return;
+        OpenTrackMap();
+        e.Handled = true;
+    }
+
     private void Hide_Click(object sender, RoutedEventArgs e)
     {
         Hide();
@@ -107,7 +120,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var vm = new RecordsBrowserViewModel(_trackRecords, _sessionReports);
+        var vm = new RecordsBrowserViewModel(_trackRecords, _sessionReports, _brandLogos);
         _recordsWindow = new RecordsWindow(vm)
         {
             Owner = IsVisible ? this : null
@@ -131,6 +144,23 @@ public partial class MainWindow : Window
         };
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
+    }
+
+    private void OpenTrackMap()
+    {
+        if (_trackMapWindow is not null)
+        {
+            _trackMapWindow.Activate();
+            return;
+        }
+
+        _trackMapWindow = new TrackMapWindow(_viewModel)
+        {
+            Owner = IsVisible ? this : null
+        };
+        _trackMapWindow.Closed += (_, _) => _trackMapWindow = null;
+        _trackMapWindow.Show();
+        _trackMapWindow.Activate();
     }
 
     private void Restart_Click(object sender, RoutedEventArgs e) =>

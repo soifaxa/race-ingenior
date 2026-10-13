@@ -27,6 +27,7 @@ Owns **WPF structure and wiring**. Visual tokens → `wec-design`. Flows → `we
 | `SettingsWindow` | PTT, TTS, overlay prefs, Gemini, auto-open report |
 | `ReportsWindow` | Browse saved session reports (`ReportsBrowserViewModel`) |
 | `RecordsWindow` | Personal bests by track + car (`RecordsBrowserViewModel`) |
+| `TrackMapWindow` | Enlarged map + standings (click dashboard TRACK MAP) |
 | `SessionReportWindow` | WEC timing-board for one `SessionReport` |
 | Overlay windows | Owned with `wec-ui-overlay` |
 

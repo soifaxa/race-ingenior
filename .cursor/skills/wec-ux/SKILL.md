@@ -21,7 +21,8 @@ Owns **flows and IA**. Look → `wec-design`. Controls → `wec-ui` / `wec-ui-ov
 
 | Need | Where |
 |------|--------|
-| Live telemetry / flags / map / tyre call / radio | Dashboard |
+| Live telemetry / flags / map / standings / tyre call / radio | Dashboard |
+| Enlarged track map + standings | Click TRACK MAP panel → `TrackMapWindow` (Esc closes) |
 | PTT, TTS rate, overlay prefs, Gemini key, auto-open report | Settings |
 | Browse past sessions | **REPORTS** (header + tray) |
 | Personal bests by track + car | **RECORDS** (header + tray) |

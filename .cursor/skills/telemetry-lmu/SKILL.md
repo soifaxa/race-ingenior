@@ -23,7 +23,8 @@ Canonical model for the rest of the app: `Models/TelemetrySnapshot.cs`.
 - Prefer **carcass** temperatures (Kelvin in shared memory → Celsius in snapshot)
 - Thresholds: `TireColdBelowC` / `TireWarmReadyC` in `appsettings.json`
 - Expose clear flags: `InPitBox`, pitlane, `IsPaused` — UI/radio/overlay depend on them
-- Field list for track map: `TelemetrySnapshot.Field` (`TrackCar` from scoring `mLapDist` / `mPlace` / player / pits)
+- Field list for track map / standings: `TelemetrySnapshot.Field` (`TrackCar` from scoring `mLapDist` / `mPlace` / player / pits)
+- Manufacturer logos: REST `/rest/watch/standings` → **`carId`** (e.g. `BMW_M4_LMGT3_2023`), fallback `vehicleFilename`; match by `slotID` / `vehicleName` / `driverName` (IronWolf SHM `mVehFilename` often empty; `mVehicleName` is team/livery for many GT3)
 - Track learning: `PlayerWorldX` / `PlayerWorldZ` + lap fraction → `TrackLayoutStore` (`Tracks/*.json`)
 - Weather on scoring: `mRaining` / `mTrackTemp` / `mAmbientTemp` / path wetness → tyre call (`TireCompoundAdvisor`)
 - Session end reports: `SessionReportService` (live start → GamePhase 8; if on track, wait for finish line / `mFinishStatus` / pits before save) → `Reports/*.md` + `.json`

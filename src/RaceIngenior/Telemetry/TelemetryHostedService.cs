@@ -40,6 +40,14 @@ public sealed class TelemetryHostedService : BackgroundService
                     if (restTick++ % 10 == 0)
                         await _rest.EnrichAsync(snap, stoppingToken);
 
+                    var field = MergeVehFilenames(snap.Field);
+                    var player = field.FirstOrDefault(c => c.IsPlayer);
+                    var playerVeh = string.IsNullOrWhiteSpace(snap.VehFilename)
+                        ? RestCache.TryResolveVehFilename(player?.SlotId ?? -1, snap.Vehicle, snap.Driver)
+                          ?? player?.VehFilename
+                          ?? ""
+                        : snap.VehFilename;
+
                     // Rebuild with REST cache fields
                     snap = new TelemetrySnapshot
                     {
@@ -47,6 +55,7 @@ public sealed class TelemetryHostedService : BackgroundService
                         Connected = snap.Connected,
                         Track = snap.Track,
                         Vehicle = snap.Vehicle,
+                        VehFilename = playerVeh,
                         Driver = snap.Driver,
                         VehicleClass = snap.VehicleClass,
                         Session = snap.Session,
@@ -90,7 +99,7 @@ public sealed class TelemetryHostedService : BackgroundService
                         RearTireCompound = snap.RearTireCompound,
                         Wheels = snap.Wheels,
                         Nearby = snap.Nearby,
-                        Field = snap.Field,
+                        Field = field,
                         VirtualEnergy = RestCache.VirtualEnergy,
                         RestNotes = RestCache.LastNotes
                     };
@@ -109,6 +118,49 @@ public sealed class TelemetryHostedService : BackgroundService
 
             await Task.Delay(TimeSpan.FromMilliseconds(_settings.TelemetryPollMs), stoppingToken);
         }
+    }
+
+    private static List<TrackCar> MergeVehFilenames(List<TrackCar> field)
+    {
+        if (field.Count == 0)
+            return field;
+
+        var changed = false;
+        var merged = new List<TrackCar>(field.Count);
+        foreach (var c in field)
+        {
+            var fromRest = RestCache.TryResolveVehFilename(c.SlotId, c.VehicleName, c.Name);
+            // Prefer REST carId/filename when SHM mVehFilename is empty or team-only.
+            if (string.IsNullOrWhiteSpace(fromRest) || string.Equals(fromRest, c.VehFilename, StringComparison.OrdinalIgnoreCase))
+            {
+                merged.Add(c);
+                continue;
+            }
+
+            changed = true;
+            merged.Add(new TrackCar
+            {
+                SlotId = c.SlotId,
+                Name = c.Name,
+                VehicleName = c.VehicleName,
+                VehFilename = fromRest,
+                VehicleClass = c.VehicleClass,
+                Place = c.Place,
+                LapDistFraction = c.LapDistFraction,
+                IsPlayer = c.IsPlayer,
+                InPits = c.InPits,
+                PitStops = c.PitStops,
+                LastLapTime = c.LastLapTime,
+                BestLapTime = c.BestLapTime,
+                LapsCompleted = c.LapsCompleted,
+                TimeBehindLeader = c.TimeBehindLeader,
+                LapsBehindLeader = c.LapsBehindLeader,
+                TimeBehindNext = c.TimeBehindNext,
+                LapsBehindNext = c.LapsBehindNext
+            });
+        }
+
+        return changed ? merged : field;
     }
 }
 

@@ -159,6 +159,7 @@ public sealed class SessionReportService
             StartedUtc = DateTimeOffset.UtcNow,
             Track = snap.Track,
             Vehicle = snap.Vehicle,
+            VehFilename = snap.VehFilename,
             VehicleClass = snap.VehicleClass,
             Driver = snap.Driver,
             SessionCode = snap.Session,
@@ -203,6 +204,8 @@ public sealed class SessionReportService
             a.Track = snap.Track;
         if (!string.IsNullOrWhiteSpace(snap.Vehicle))
             a.Vehicle = snap.Vehicle;
+        if (!string.IsNullOrWhiteSpace(snap.VehFilename))
+            a.VehFilename = snap.VehFilename;
         if (!string.IsNullOrWhiteSpace(snap.VehicleClass))
             a.VehicleClass = snap.VehicleClass;
         if (!string.IsNullOrWhiteSpace(snap.Driver))
@@ -371,6 +374,7 @@ public sealed class SessionReportService
             EndReason = reason,
             Track = a.Track,
             Vehicle = a.Vehicle,
+            VehFilename = a.VehFilename,
             VehicleClass = a.VehicleClass,
             Driver = a.Driver,
             SessionType = a.SessionType,
@@ -489,6 +493,7 @@ public sealed class SessionReportService
                         JsonPath = path,
                         Track = report.Track,
                         Vehicle = report.Vehicle,
+                        VehFilename = report.VehFilename,
                         VehicleClass = report.VehicleClass,
                         SessionType = report.SessionType,
                         StartedUtc = report.StartedUtc,
@@ -537,7 +542,8 @@ public sealed class SessionReportService
         sb.AppendLine();
         sb.AppendLine("## Session");
         sb.AppendLine($"- **Track:** {OrDash(r.Track)}");
-        sb.AppendLine($"- **Car:** {OrDash(r.Vehicle)} ({OrDash(r.VehicleClass)})");
+        sb.AppendLine(
+            $"- **Car:** {BrandResolver.FormatClassAndBrand(r.VehFilename, vehicleName: r.Vehicle, vehicleClass: r.VehicleClass)}");
         sb.AppendLine($"- **Driver:** {OrDash(r.Driver)}");
         sb.AppendLine($"- **Type:** {r.SessionType} (code {r.SessionCode})");
         sb.AppendLine($"- **Duration:** {FormatDuration(r.DurationSec)}");
@@ -735,6 +741,7 @@ public sealed class SessionReportService
         public DateTimeOffset StartedUtc { get; set; }
         public string Track { get; set; } = "";
         public string Vehicle { get; set; } = "";
+        public string VehFilename { get; set; } = "";
         public string VehicleClass { get; set; } = "";
         public string Driver { get; set; } = "";
         public string SessionType { get; set; } = "";

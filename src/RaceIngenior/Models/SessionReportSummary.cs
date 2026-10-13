@@ -1,3 +1,5 @@
+using RaceIngenior.Services;
+
 namespace RaceIngenior.Models;
 
 /// <summary>Lightweight row for the in-app reports browser.</summary>
@@ -7,6 +9,7 @@ public sealed class SessionReportSummary
     public string JsonPath { get; init; } = "";
     public string Track { get; init; } = "";
     public string Vehicle { get; init; } = "";
+    public string VehFilename { get; init; } = "";
     public string VehicleClass { get; init; } = "";
     public string SessionType { get; init; } = "";
     public DateTimeOffset StartedUtc { get; init; }
@@ -21,11 +24,11 @@ public sealed class SessionReportSummary
     {
         get
         {
-            var car = string.IsNullOrWhiteSpace(Vehicle) ? "—" : Vehicle;
-            var cls = string.IsNullOrWhiteSpace(VehicleClass) ? "" : $" ({VehicleClass})";
+            var car = BrandResolver.FormatClassAndBrand(
+                VehFilename, vehicleName: Vehicle, vehicleClass: VehicleClass);
             var best = LapTimeFormat.Format(BestLapSec);
             var place = FinalPlace > 0 ? $"P{FinalPlace}" : "—";
-            return $"{StartedUtc:yyyy-MM-dd HH:mm} UTC  ·  {SessionType}  ·  {LapsCompleted} laps  ·  best {best}  ·  {place}  ·  {car}{cls}";
+            return $"{StartedUtc:yyyy-MM-dd HH:mm} UTC  ·  {SessionType}  ·  {LapsCompleted} laps  ·  best {best}  ·  {place}  ·  {car}";
         }
     }
 }

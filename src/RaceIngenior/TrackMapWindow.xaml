@@ -1,0 +1,123 @@
+<Window x:Class="RaceIngenior.TrackMapWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:RaceIngenior.Controls"
+        Title="Track map — Race Ingenior"
+        Width="1280"
+        Height="720"
+        MinWidth="960"
+        MinHeight="480"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="True"
+        FontFamily="Bahnschrift, Segoe UI"
+        Topmost="True">
+
+  <Window.Resources>
+    <Style x:Key="WecButton" TargetType="Button">
+      <Setter Property="Background" Value="#1A1A1A"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+      <Setter Property="BorderBrush" Value="#444444"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Bd"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    Padding="{TemplateBinding Padding}"
+                    SnapsToDevicePixels="True">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="#E10600"/>
+                <Setter TargetName="Bd" Property="BorderBrush" Value="#E10600"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="#B00500"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="WecButtonGhost" TargetType="Button" BasedOn="{StaticResource WecButton}">
+      <Setter Property="Background" Value="#111111"/>
+      <Setter Property="BorderBrush" Value="#555555"/>
+    </Style>
+  </Window.Resources>
+
+  <Border Background="#0A0A0A" BorderBrush="#2A2A2A" BorderThickness="1" SnapsToDevicePixels="True">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="36"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <Grid Grid.Row="0" Background="#000000" MouseLeftButtonDown="Header_OnMouseLeftButtonDown">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="6"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Rectangle Grid.Column="0" Fill="#E10600"/>
+        <TextBlock Grid.Column="1" Text="FIA WEC  ·  TRACK MAP" Foreground="#FFFFFF"
+                   FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBlock Grid.Column="2" Text="{Binding Track}" Foreground="#888888"
+                   FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
+                   Margin="16,0,12,0" TextTrimming="CharacterEllipsis"/>
+        <TextBlock Grid.Column="3" Text="{Binding TrackMapModeLabel}" Foreground="#666666"
+                   FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"
+                   ToolTip="LEARNED = outline from Tracks/*.json · OVAL = temporary fallback"/>
+        <Button x:Name="MaximizeButton" Grid.Column="4" Content="□" Click="Maximize_Click"
+                Width="36" Height="28" Margin="0,0,0,0" Cursor="Hand" Background="Transparent"
+                Foreground="#AAAAAA" BorderThickness="0" FontSize="14" FontWeight="Bold"
+                ToolTip="Maximize"/>
+        <Button Grid.Column="5" Content="✕" Click="Close_Click" Width="36" Height="28"
+                Margin="0,0,4,0" Cursor="Hand" Background="Transparent"
+                Foreground="#AAAAAA" BorderThickness="0" FontSize="14" FontWeight="Bold"/>
+      </Grid>
+
+      <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="12"/>
+          <ColumnDefinition Width="420" MinWidth="320"/>
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Background="#121212" BorderBrush="#1F1F1F" BorderThickness="0,1,0,0">
+          <controls:TrackMapControl Cars="{Binding TrackCars}"
+                                    Layout="{Binding CurrentTrackLayout}"
+                                    StatusMessage="{Binding TrackMapStatus}"
+                                    DetailScale="2"
+                                    Margin="12"/>
+        </Border>
+        <Border Grid.Column="2" Background="#121212" BorderBrush="#2A2A2A" BorderThickness="1,1,0,0">
+          <controls:StandingsPanel/>
+        </Border>
+      </Grid>
+
+      <Border Grid.Row="2" Background="#000000" Padding="12,10" BorderBrush="#1F1F1F" BorderThickness="0,1,0,0">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Left" Foreground="#555555" FontSize="10"
+                     Text="F11 or □ maximize · Esc restores then closes · CLOSE to dismiss"
+                     VerticalAlignment="Center"/>
+          <Button DockPanel.Dock="Right" Style="{StaticResource WecButtonGhost}" Content="CLOSE"
+                  Click="Close_Click" IsCancel="True" IsDefault="True"
+                  HorizontalAlignment="Right" Padding="16,8"/>
+        </DockPanel>
+      </Border>
+    </Grid>
+  </Border>
+</Window>

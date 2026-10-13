@@ -44,6 +44,7 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<TrackLayoutStore>();
                 services.AddSingleton<TrackLayoutLearner>();
                 services.AddSingleton<TrackRecordsStore>();
+                services.AddSingleton<BrandLogoStore>();
                 services.AddSingleton<SessionReportService>();
                 services.AddHttpClient<LmuRestClient>();
                 services.AddHttpClient("gemini");

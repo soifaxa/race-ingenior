@@ -5,13 +5,29 @@ All notable changes to Race Ingenior are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease label on the informational version.
 
+## [0.0.1.5-dev] — 2026-10-13
+
+### Added
+
+- Manufacturer SVG logos from LMU UI pack under `Assets/Brands` (standings + **RECORDS**)
+- Brand resolve: REST **`vehicleFilename`** over opaque **`carId`** hashes; GT3 team liveries (e.g. AF Corse → Ferrari); single-make **LMP2 → Oreca**, **LMP3 → Ligier**
+
+### Changed
+
+- Telemetry CAR, records, session reports, and REPORTS list show **brand + class** (e.g. `Ferrari LMGT3`, `Aston Martin HYPER`)
+- Class label **LMGT3** (not GT3) everywhere
+
+### Notes
+
+- Assembly / file version: `0.0.1.5`. Informational version: `0.0.1.5-dev`.
+
 ## [0.0.1.4-dev] — 2026-10-12
 
 ### Added
 
 - Dedicated **Settings** window (header + tray): PTT binding, speech rate, overlay options, Gemini API key (Save / Clear / Test), clear session memory
 - Gemini API key persisted in `%LocalAppData%\RaceIngenior\user_settings.json`
-- **Track map** panel under telemetry: class colours (Hypercar red / LMP2 blue / LMGT3 green; white ring = you)
+- **Track map** panel under telemetry: class colours (Hypercar red / LMP2 blue / LMGT3 green; solid white = you)
 - Track outline **learning**: drive full on-track laps to record world XZ into `Tracks/*.json` (repo + output); missing layout falls back to oval with an explanation banner
 - **Tyre call** panel: Soft / Medium / Hard / Wet from track temp + rain / path wetness (scoring weather), shows fitted compound when available
 - Flag warnings (radio + dashboard): FCY / safety car, yellow state (pits closed/open, resume), local sector yellow, blue flag, session stop, green after FCY
@@ -20,6 +36,9 @@ Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease lab
 - End-of-session report opens in-app (Settings: “Automatically open end-of-session report”, on by default)
 - Session report saves only on GamePhase **8** (Session over) — not pit entry or phase 7
 - If still on track at session over, report waits until the **finish line** (or pits / DNF / disconnect)
+- Click the dashboard **TRACK MAP** to open an enlarged map window with **STANDINGS** on the right (thicker outline/markers, maximize / F11, Esc / CLOSE to dismiss)
+- Track map car markers ease smoothly between telemetry samples (~60 fps)
+- Live **STANDINGS** panel (P / manufacturer logo / driver / class / last / best / gap / pit; player row highlighted; refresh 5 s)
 
 ### Changed
 

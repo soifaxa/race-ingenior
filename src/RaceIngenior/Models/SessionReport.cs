@@ -9,6 +9,8 @@ public sealed class SessionReport
 
     public string Track { get; set; } = "";
     public string Vehicle { get; set; } = "";
+    /// <summary>LMU .veh filename when known (manufacturer / model identity).</summary>
+    public string VehFilename { get; set; } = "";
     public string VehicleClass { get; set; } = "";
     public string Driver { get; set; } = "";
     public string SessionType { get; set; } = "";

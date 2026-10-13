@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RaceIngenior.Models;
@@ -16,6 +17,8 @@ public sealed class RecordCarRow
 {
     public string VehicleName { get; init; } = "";
     public string VehicleClass { get; init; } = "";
+    public string Brand { get; init; } = "";
+    public ImageSource? BrandLogo { get; init; }
     public string BestLap { get; init; } = "";
     public string SetAt { get; init; } = "";
     public string ClassLine =>
@@ -26,15 +29,20 @@ public sealed partial class RecordsBrowserViewModel : ObservableObject
 {
     private readonly TrackRecordsStore _store;
     private readonly SessionReportService _reports;
+    private readonly BrandLogoStore _brandLogos;
 
     public ObservableCollection<RecordTrackGroup> Tracks { get; } = new();
 
     [ObservableProperty] private string _statusText = "";
 
-    public RecordsBrowserViewModel(TrackRecordsStore store, SessionReportService reports)
+    public RecordsBrowserViewModel(
+        TrackRecordsStore store,
+        SessionReportService reports,
+        BrandLogoStore brandLogos)
     {
         _store = store;
         _reports = reports;
+        _brandLogos = brandLogos;
         _store.RecordsChanged += () =>
             System.Windows.Application.Current?.Dispatcher.Invoke(Refresh);
         Refresh();
@@ -60,10 +68,15 @@ public sealed partial class RecordsBrowserViewModel : ObservableObject
 
             foreach (var r in trackGroup.OrderBy(x => x.BestLapSec))
             {
+                var brand = string.IsNullOrWhiteSpace(r.Brand)
+                    ? BrandResolver.ResolveDisplay(r.VehicleName, vehicleClass: r.VehicleClass)
+                    : r.Brand;
                 group.Cars.Add(new RecordCarRow
                 {
-                    VehicleName = string.IsNullOrWhiteSpace(r.VehicleName) ? "—" : r.VehicleName,
+                    VehicleName = BrandResolver.FormatClassAndBrandLabel(r.VehicleClass, brand),
                     VehicleClass = r.VehicleClass,
+                    Brand = string.IsNullOrWhiteSpace(brand) ? "—" : brand,
+                    BrandLogo = _brandLogos.GetLogoForVehicle(r.VehicleName, r.VehicleClass),
                     BestLap = LapTimeFormat.Format(r.BestLapSec),
                     SetAt = r.SetAtUtc == default ? "—" : $"{r.SetAtUtc:yyyy-MM-dd HH:mm} UTC"
                 });

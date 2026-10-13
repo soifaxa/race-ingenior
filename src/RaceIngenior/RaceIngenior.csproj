@@ -11,10 +11,10 @@
     <AssemblyName>RaceIngenior</AssemblyName>
     <ApplicationIcon />
     <LangVersion>latest</LangVersion>
-    <Version>0.0.1.4</Version>
-    <AssemblyVersion>0.0.1.4</AssemblyVersion>
-    <FileVersion>0.0.1.4</FileVersion>
-    <InformationalVersion>0.0.1.4-dev</InformationalVersion>
+    <Version>0.0.1.5</Version>
+    <AssemblyVersion>0.0.1.5</AssemblyVersion>
+    <FileVersion>0.0.1.5</FileVersion>
+    <InformationalVersion>0.0.1.5-dev</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +24,7 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
+    <PackageReference Include="SharpVectors.Wpf" Version="1.8.4" />
     <PackageReference Include="System.Speech" Version="8.0.0" />
     <PackageReference Include="Whisper.net" Version="1.9.1" />
     <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
@@ -37,6 +38,12 @@
 
   <ItemGroup>
     <None Include="..\..\Tracks\**\*.json" Link="Tracks\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\Tracks')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\Brands\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

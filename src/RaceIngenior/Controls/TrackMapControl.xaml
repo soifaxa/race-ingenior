@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="Transparent">
   <Grid>
-    <Canvas x:Name="MapCanvas" ClipToBounds="True"/>
+    <Canvas x:Name="MapCanvas" ClipToBounds="True" IsHitTestVisible="False"/>
+    <Canvas x:Name="CarsCanvas" ClipToBounds="True"/>
     <Border x:Name="FallbackBanner"
             Background="#CC000000"
             BorderBrush="#444444"
@@ -25,7 +26,8 @@
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
                Visibility="Collapsed"/>
-    <StackPanel Orientation="Horizontal"
+    <StackPanel x:Name="LegendPanel"
+                Orientation="Horizontal"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
                 Margin="8,0,0,6">
@@ -35,7 +37,7 @@
       <TextBlock Text="LMP2" Foreground="#888888" FontSize="9" FontWeight="SemiBold" Margin="0,0,10,0" VerticalAlignment="Center"/>
       <Ellipse Width="8" Height="8" Fill="#22C55E" Margin="0,0,4,0" VerticalAlignment="Center"/>
       <TextBlock Text="LMGT3" Foreground="#888888" FontSize="9" FontWeight="SemiBold" Margin="0,0,10,0" VerticalAlignment="Center"/>
-      <Ellipse Width="8" Height="8" Fill="#E10600" Stroke="#FFFFFF" StrokeThickness="1.5" Margin="0,0,4,0" VerticalAlignment="Center"/>
+      <Ellipse Width="8" Height="8" Fill="#FFFFFF" Margin="0,0,4,0" VerticalAlignment="Center"/>
       <TextBlock Text="YOU" Foreground="#888888" FontSize="9" FontWeight="SemiBold" VerticalAlignment="Center"/>
     </StackPanel>
   </Grid>

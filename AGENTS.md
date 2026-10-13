@@ -26,6 +26,6 @@ Track maps: drive full on-track laps to learn outlines into `Tracks/*.json` (com
 
 Session reports: written when a live session ends (GamePhase 8); if still on track, waits for the finish line → `Reports/*.md` + `.json` (also `%LocalAppData%\RaceIngenior\Reports`). Browse anytime from the dashboard **REPORTS** button.
 
-Track records: personal best lap per track + car → **RECORDS** button; stored in `%LocalAppData%\RaceIngenior\track_records.json` (seeded from past reports).
+Track records: personal best lap per track + car → **RECORDS** button; stored in `%LocalAppData%\RaceIngenior\track_records.json` (seeded from past reports). Manufacturer logos: `src/RaceIngenior/Assets/Brands/*.svg` (from LMU `UI.zip` manufacturer images).
 
 Stop a running instance before rebuild if the exe is locked.

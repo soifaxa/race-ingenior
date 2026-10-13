@@ -114,16 +114,23 @@
                         <Border BorderBrush="#1F1F1F" BorderThickness="0,0,0,1" Padding="12,10" Background="#000000">
                           <Grid>
                             <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="40"/>
                               <ColumnDefinition Width="*"/>
                               <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <StackPanel>
+                            <Image Grid.Column="0"
+                                   Source="{Binding BrandLogo}"
+                                   Width="28" Height="20"
+                                   Stretch="Uniform"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Left"
+                                   ToolTip="{Binding Brand}"
+                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
                               <TextBlock Text="{Binding VehicleName}" Foreground="#F2F2F2"
                                          FontSize="14" FontWeight="Bold" TextWrapping="Wrap"/>
-                              <TextBlock Text="{Binding ClassLine}" Foreground="#888888"
-                                         FontSize="11" FontWeight="SemiBold" Margin="0,4,0,0"/>
                             </StackPanel>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="16,0,0,0">
                               <TextBlock Text="{Binding BestLap}" Foreground="#E10600"
                                          FontSize="20" FontWeight="Bold" HorizontalAlignment="Right"/>
                               <TextBlock Text="{Binding SetAt}" Foreground="#555555"
