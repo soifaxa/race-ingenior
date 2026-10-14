@@ -32,3 +32,10 @@ Session reports: written when a live session ends (GamePhase 8); if still on tra
 Track records: personal best lap per track + car → **RECORDS** button; stored in `%LocalAppData%\RaceIngenior\track_records.json` (seeded from past reports). Manufacturer logos: `src/RaceIngenior/Assets/Brands/*.svg` (from LMU `UI.zip` manufacturer images).
 
 Stop a running instance before rebuild if the exe is locked.
+
+## Branching
+
+- **`main`** — releases only; never commit directly
+- **`dev`** — integration branch; all feature/fix work branches off `dev`
+- Pull requests target `dev`
+- Releases: merge `dev` → `main`, tag, and publish
