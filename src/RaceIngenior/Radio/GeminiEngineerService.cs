@@ -58,12 +58,10 @@ public sealed class GeminiEngineerService : IEngineerLlm
             return new GeminiTestResult(false, LastError);
         }
 
-        // Gemini 3.x "thinking" can consume a small maxOutputTokens budget → empty text + MAX_TOKENS.
         var body = BuildRequest(
             systemPrompt: null,
             userText: "Reply with exactly: OK",
-            maxOutputTokens: 256,
-            temperature: 0);
+            maxOutputTokens: 256);
 
         try
         {
@@ -120,7 +118,7 @@ public sealed class GeminiEngineerService : IEngineerLlm
 
         // Leave headroom above radio length: thinking models may still reserve some tokens.
         var maxOut = Math.Clamp(_settings.MaxOutputTokens, 128, 512);
-        var body = BuildRequest(SystemPrompt, user.ToString(), maxOut, temperature: 0.3);
+        var body = BuildRequest(SystemPrompt, user.ToString(), maxOut);
 
         try
         {
@@ -154,16 +152,14 @@ public sealed class GeminiEngineerService : IEngineerLlm
         }
     }
 
-    private static JsonObject BuildRequest(string? systemPrompt, string userText, int maxOutputTokens, double temperature)
+    private static JsonObject BuildRequest(string? systemPrompt, string userText, int maxOutputTokens)
     {
         var generationConfig = new JsonObject
         {
-            ["temperature"] = temperature,
             ["maxOutputTokens"] = maxOutputTokens,
-            // Disable / minimize thinking so the token budget is used for spoken text.
             ["thinkingConfig"] = new JsonObject
             {
-                ["thinkingBudget"] = 0
+                ["thinkingLevel"] = "minimal"
             }
         };
 

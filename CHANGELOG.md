@@ -5,6 +5,16 @@ All notable changes to Race Ingenior are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning uses `Major.Minor.Patch.Build` with an optional `-dev` prerelease label on the informational version.
 
+## [0.1.1] — 2026-10-14
+
+### Fixed
+
+- Gemini API requests now comply with Gemini 3.6+ migration guide: removed deprecated sampling parameters (`temperature`) and replaced `thinkingBudget` with `thinkingLevel` to prevent HTTP 400 errors on future model versions
+
+### Notes
+
+- Assembly / file version: `0.1.1.0`. Informational version: `0.1.1`.
+
 ## [0.1.0] — 2026-10-13
 
 First public minor release of Race Ingenior (Le Mans Ultimate race engineer: radio + telemetry + overlay).
